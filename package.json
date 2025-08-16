@@ -1,0 +1,77 @@
+{
+  "name": "react-htx",
+  "version": "1.0.0",
+  "description": "Use HTML on the server to compose your react application.",
+  "license": "MIT",
+  "author": "Franz Mayr-Wilding",
+  "repository": {
+    "type": "git",
+    "url": "git+https://example.com/your/repo.git"
+  },
+  "bugs": {
+    "url": "https://example.com/your/repo/issues"
+  },
+  "homepage": "https://example.com/your/repo#readme",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./App": {
+      "types": "./dist/App.d.ts",
+      "import": "./dist/App.mjs",
+      "require": "./dist/App.cjs"
+    },
+    "./Router": {
+      "types": "./dist/Router.d.ts",
+      "import": "./dist/Router.mjs",
+      "require": "./dist/Router.cjs"
+    },
+    "./HtxComponent": {
+      "types": "./dist/HtxComponent.d.ts",
+      "import": "./dist/HtxComponent.mjs",
+      "require": "./dist/HtxComponent.cjs"
+    },
+    "./RootComponent": {
+      "types": "./dist/RootComponent.d.ts",
+      "import": "./dist/RootComponent.mjs",
+      "require": "./dist/RootComponent.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "clean": "rm -rf dist dist-webpack types",
+    "build": "npm run clean && npm run build:rollup",
+    "build:rollup": "rollup -c",
+    "build:webpack": "webpack --config webpack.config.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": "^19"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-node-resolve": "^15.2.0",
+    "@types/react": "^19.1.10",
+    "rollup": "^4.0.0",
+    "rollup-plugin-dts": "^6.0.0",
+    "rollup-plugin-typescript2": "^0.36.0",
+    "rollup-plugin-peer-deps-external": "^2.2.4",
+    "ts-loader": "^9.5.0",
+    "typescript": "^5.0.0",
+    "webpack": "^5.90.0",
+    "webpack-cli": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
