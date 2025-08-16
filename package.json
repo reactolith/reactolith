@@ -13,6 +13,7 @@
   },
   "homepage": "https://github.com/franzwilding/react-htx",
   "type": "module",
+  "keywords": ["react", "ssr"],
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
