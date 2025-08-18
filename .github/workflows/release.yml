@@ -21,10 +21,16 @@ jobs:
       - name: Install dependencies
         run: npm ci --dev
 
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Run tests
+        run: npm test -- --run
+
       - name: Build package
         run: npm run build --if-present
 
       - name: Publish package
-        run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish

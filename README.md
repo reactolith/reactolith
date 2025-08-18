@@ -41,7 +41,7 @@ Your backend returns simple HTML:
   <body>
     <div id="htx-app">
       <h1>Hello world</h1>
-      <ui-button>This will be a shadcn button</ui-button>
+      <ui-button type="primary">This will be a shadcn button</ui-button>
     </div>
   </body>
 </html>
@@ -139,6 +139,56 @@ When navigating, `react-htx` fetches the **next HTML page** and applies **only t
 Only the `<h1>` text and the `pressed` prop are updated — everything else remains untouched ✅.
 
 ---
+
+## Props
+
+If you pass props to your htx components like this: 
+```html
+<my-component enabled name="test" data-foo="baa" as="{my-other-component}" json-config='{ "foo": "baa" }'
+```
+
+your components will get this props: 
+```tsx
+const props = {
+    enabled: true,
+    name: 'test',
+    foot: 'baa',
+    as: <MyOtherComponent />,
+    config: { foo: 'baa' },
+}
+```
+
+---
+
+## Slots
+
+react-htx also provides a simple slot mechanism: Every child if a htx-component with a slot attribute will be 
+transformed to a slot property, holding the children of the element:
+
+```html
+<my-component>
+    <template slot="header"><h1>My header content</h1></template>
+    <div slot="footer">My footer content</div>
+</my-component>
+```
+
+your components will get this props:
+
+```tsx
+function MyComponent({ header, footer } : { header : ReactNode, footer : ReactNode }) {
+    <article>
+        <header>{header}</header>
+        <div>My content</div>
+        <footer>{footer}</footer>
+        <aside>
+            <footer>{footer}</footer>
+        </aside>
+    </article>
+}
+```
+
+---
+
 
 ## 🤝 Contributing
 

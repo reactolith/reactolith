@@ -1,12 +1,20 @@
 import { App } from "./App";
 import {Href, RouterOptions} from "@react-types/shared";
 
+type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+
 export class Router {
 
-    private app : App
+    private readonly app : App
+    private readonly fetch : FetchLike
 
-    constructor(app : App, doc : Document = document) {
+    constructor(
+        app : App,
+        doc : Document = document,
+        fetchImpl : FetchLike = globalThis.fetch,
+    ) {
         this.app = app
+        this.fetch = fetchImpl
 
         if(doc.defaultView) {
             doc.defaultView.addEventListener('popstate', async () => {
@@ -52,7 +60,7 @@ export class Router {
     }
 
     async visit(input : URL | string, init : RequestInit = { method: 'GET' }, pushState : boolean = true) : Promise<boolean> {
-        const response = await fetch(input, init)
+        const response = await this.fetch(input, init)
         const html = await response.text()
 
         if(pushState) {

@@ -5,9 +5,6 @@ const toPascalCase = (str: string) => {
 }
 
 const normalizePropName = (name : string) => {
-    if(name.startsWith('data-')) {
-        return name
-    }
     if(name.startsWith('json-')) {
         name = name.substring(5)
     }
@@ -31,6 +28,12 @@ function getProps(element : HTMLElement, component : ElementType) : { [key: stri
             if(attr.name.startsWith('json-')) {
                 props[normalizePropName(attr.name)] = JSON.parse(attr.value)
             } else {
+
+                // Special case: Empty value will be transformed to bool true value
+                if(typeof value === 'string' && value.length === 0) {
+                    value = true
+                }
+
                 props[attr.name === 'class' ? 'className' : normalizePropName(attr.name)] = value
             }
         }
@@ -41,10 +44,13 @@ function getProps(element : HTMLElement, component : ElementType) : { [key: stri
 function getSlots(element : HTMLElement, component : ElementType) : Record<string, React.ReactNode[]> {
     const slots : Record<string, ReactNode[]> = {}
     Array.from(element.childNodes).forEach((child) => {
-        if(child instanceof HTMLTemplateElement) {
+        if(child instanceof HTMLElement) {
             Array.from(child.attributes).forEach(attr => {
-                if(attr.name.startsWith('#')) {
-                    slots[attr.name.substring(1)] = getChildren(child.content, component)
+                if(attr.name === 'slot') {
+                    slots[attr.value] = getChildren(
+                        child instanceof HTMLTemplateElement ? child.content : child,
+                        component
+                    )
                 }
             })
         }
@@ -55,7 +61,7 @@ function getSlots(element : HTMLElement, component : ElementType) : Record<strin
 function getChildren(element : HTMLElement | DocumentFragment, component : ElementType) : ReactNode[] {
     return Array.from(element.childNodes).map((child, index) => {
 
-        if(child instanceof Element && child.tagName === 'TEMPLATE') {
+        if(child instanceof HTMLElement && child.hasAttribute('slot')) {
             return null
         }
 
