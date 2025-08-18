@@ -49,7 +49,7 @@ export function generateWebTypes(options: GenerateWebTypesOptions) {
     elements.sort((a, b) => a.name.localeCompare(b.name));
 
     const webTypes = {
-        framework: "web",
+        "$schema": "https://raw.githubusercontent.com/JetBrains/web-types/master/schema/web-types.json",
         name: options.libraryName || "htx-components",
         version: options.libraryVersion || "1.0.0",
         contributions: { html: { elements } },
