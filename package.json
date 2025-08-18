@@ -1,6 +1,6 @@
 {
   "name": "react-htx",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Use HTML on the server to compose your react application.",
   "license": "MIT",
   "author": "Franz Mayr-Wilding",
@@ -69,6 +69,7 @@
     "react-dom": "^19"
   },
   "devDependencies": {
+    "@eslint/js": "^9.33.0",
     "@react-types/shared": "^3.31.0",
     "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-node-resolve": "^15.2.0",
@@ -78,7 +79,14 @@
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@vitest/coverage-v8": "^3.2.4",
+    "eslint": "^9.33.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-react": "^7.37.5",
+    "globals": "^16.3.0",
+    "jiti": "^2.5.1",
     "jsdom": "^26.1.0",
+    "prettier": "^3.6.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "rollup": "^4.0.0",
@@ -88,6 +96,7 @@
     "ts-loader": "^9.5.0",
     "ts-morph": "^26.0.0",
     "typescript": "^5.0.0",
+    "typescript-eslint": "^8.39.1",
     "vitest": "^3.2.4",
     "webpack": "^5.90.0",
     "webpack-cli": "^5.1.0"
