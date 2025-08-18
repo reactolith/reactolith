@@ -14,7 +14,7 @@ export class Router {
         fetchImpl : FetchLike = fetch,
     ) {
         this.app = app
-        this.fetch = fetchImpl
+        this.fetch = (input, init) => fetchImpl(input, init)
 
         if(doc.defaultView) {
             doc.defaultView.addEventListener('popstate', async () => {
