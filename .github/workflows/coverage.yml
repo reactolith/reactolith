@@ -1,0 +1,63 @@
+name: Test coverage
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+permissions:
+  contents: write    # needed to commit the badge file on pushes to main
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Create Shields.io badge JSON from coverage summary
+        run: |
+          node -e "
+            const fs = require('fs');
+            const s = JSON.parse(fs.readFileSync('./coverage/coverage-summary.json', 'utf8'));
+            const pct = (s?.total?.lines?.pct ?? 0);
+            const color = pct >= 90 ? 'brightgreen'
+                         : pct >= 80 ? 'green'
+                         : pct >= 70 ? 'yellowgreen'
+                         : pct >= 60 ? 'yellow'
+                         : pct >= 50 ? 'orange'
+                         : 'red';
+            const badge = { schemaVersion: 1, label: 'coverage', message: pct.toFixed(1) + '%', color };
+            fs.mkdirSync('.github/badges', { recursive: true });
+            fs.writeFileSync('.github/badges/coverage.json', JSON.stringify(badge));
+          "
+
+      - name: Commit badge (main branch only)
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        run: |
+          if [ -n "$(git status --porcelain .github/badges/coverage.json)" ]; then
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add .github/badges/coverage.json
+            git commit -m "chore(ci): update coverage badge"
+            git push
+          fi
+
+      - name: Upload HTML coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: coverage
