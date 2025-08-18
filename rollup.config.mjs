@@ -5,7 +5,7 @@ import typescript from 'rollup-plugin-typescript2';
 import dts from 'rollup-plugin-dts';
 
 // externalize react and its subpaths (jsx-runtime) + react-dom if you use it
-const external = (id) => /^(react|react-dom)(\/|$)/.test(id);
+const external = (id) => /^(react|react-dom|ts-morph)(\/|$)/.test(id);
 
 export default [
     // JS bundles
@@ -25,6 +25,24 @@ export default [
         output: [
             { file: 'dist/index.mjs', format: 'esm', sourcemap: true },
             { file: 'dist/index.cjs', format: 'cjs', sourcemap: true, exports: 'named' },
+        ],
+    },
+    // JS bundles
+    {
+        input: 'src/cli/generate-web-types.ts',
+        external,
+        plugins: [
+            peerDepsExternal(),
+            resolve({ extensions: ['.mjs', '.js', '.ts', '.tsx'] }),
+            commonjs(),
+            typescript({
+                tsconfig: './tsconfig.json',
+                clean: true,
+                tsconfigOverride: { compilerOptions: { declaration: false } }, // dts plugin handles .d.ts
+            }),
+        ],
+        output: [
+            { file: 'dist/cli/generate-web-types.cjs', format: 'cjs', sourcemap: true, exports: 'named' },
         ],
     },
     // Types

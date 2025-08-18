@@ -1,6 +1,6 @@
 {
   "name": "react-htx",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Use HTML on the server to compose your react application.",
   "license": "MIT",
   "author": "Franz Mayr-Wilding",
@@ -51,6 +51,9 @@
     "dist",
     "README.md"
   ],
+  "bin": {
+    "generate-web-types": "./dist/cli/generate-web-types.cjs"
+  },
   "sideEffects": false,
   "scripts": {
     "clean": "rm -rf dist dist-webpack types",
@@ -83,6 +86,7 @@
     "rollup-plugin-peer-deps-external": "^2.2.4",
     "rollup-plugin-typescript2": "^0.36.0",
     "ts-loader": "^9.5.0",
+    "ts-morph": "^26.0.0",
     "typescript": "^5.0.0",
     "vitest": "^3.2.4",
     "webpack": "^5.90.0",
