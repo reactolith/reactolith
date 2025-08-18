@@ -1,7 +1,7 @@
 import { App } from "./App";
 import {Href, RouterOptions} from "@react-types/shared";
 
-type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+export type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
 
 export class Router {
 
@@ -11,7 +11,7 @@ export class Router {
     constructor(
         app : App,
         doc : Document = document,
-        fetchImpl : FetchLike = globalThis.fetch,
+        fetchImpl : FetchLike = fetch,
     ) {
         this.app = app
         this.fetch = fetchImpl

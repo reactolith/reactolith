@@ -1,7 +1,7 @@
 import {createRoot, Root} from "react-dom/client";
 import React, {ElementType} from "react";
 import {RootComponent} from "./RootComponent";
-import {Router} from "./Router";
+import {FetchLike, Router} from "./Router";
 
 export class App {
     public readonly router : Router
@@ -16,8 +16,9 @@ export class App {
         selector : ((doc : Document) => HTMLElement | null) | string = '#htx-app',
         root? : Root,
         doc : Document = document,
+        fetchImp : FetchLike = fetch,
     ) {
-        this.router = new Router(this, doc)
+        this.router = new Router(this, doc, fetchImp)
         this.component = component
         this.rootComponent = rootComponent
 
