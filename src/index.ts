@@ -1,4 +1,8 @@
 export { App } from "./App";
 export { Router } from "./Router";
 export { HtxComponent } from "./HtxComponent";
-export { RootComponent } from "./RootComponent";
+export { AppProvider } from "./AppProvider";
+export {
+  RouterLoadingProvider,
+  useRouterLoading,
+} from "./RouterLoadingProvider";

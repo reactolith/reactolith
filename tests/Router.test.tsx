@@ -1,10 +1,15 @@
 import { screen, waitFor, fireEvent } from "@testing-library/dom";
 import { vi } from "vitest";
-import { App } from "../src";
-import { ReactNode } from "react";
+import { App, useRouterLoading } from "../src";
+import { ReactNode, act } from "react";
 
 function testComponent({ is, children }: { is: string; children: ReactNode }) {
-  return <pre data-is={is}>{children}</pre>;
+  const { loading } = useRouterLoading();
+  return (
+    <pre data-is={is} data-loading={loading}>
+      {children}
+    </pre>
+  );
 }
 
 describe("Test app router", () => {
@@ -29,19 +34,26 @@ describe("Test app router", () => {
     new App(testComponent);
     const root = await screen.findByTestId("htx-app");
 
+    // Give React a tick so the Provider's useEffect subscribes
+    await act(async () => {});
+
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
 
     expect(root.querySelector("pre")).toHaveTextContent("Foo");
+    expect(root.querySelector("pre")).toHaveAttribute("data-loading", "false");
 
-    fireEvent.click(root.querySelector("a"));
+    await fireEvent.click(root.querySelector("a"));
+
+    expect(root.querySelector("pre")).toHaveAttribute("data-loading", "true");
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalled();
       expect(root.querySelector("pre")).toHaveTextContent("Baa");
     });
 
+    expect(root.querySelector("pre")).toHaveAttribute("data-loading", "false");
     expect(root.querySelector("pre")).toHaveTextContent("Baa");
   });
 });

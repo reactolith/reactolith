@@ -58,7 +58,6 @@ export function generateWebTypes(options: GenerateWebTypesOptions) {
   };
   const outFile = options.outFile || "web-types.json";
   fs.writeFileSync(outFile, JSON.stringify(webTypes, null, 2));
-  console.log(`✅ ${outFile} generated (${elements.length} components.)`);
 }
 
 function extractAttributes(decl: Node) {

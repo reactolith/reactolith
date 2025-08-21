@@ -1,6 +1,6 @@
 {
   "name": "react-htx",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Use HTML on the server to compose your react application.",
   "license": "MIT",
   "author": "Franz Mayr-Wilding",
@@ -26,25 +26,8 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs"
     },
-    "./App": {
-      "types": "./dist/App.d.ts",
-      "import": "./dist/App.mjs",
-      "require": "./dist/App.cjs"
-    },
-    "./Router": {
-      "types": "./dist/Router.d.ts",
-      "import": "./dist/Router.mjs",
-      "require": "./dist/Router.cjs"
-    },
-    "./HtxComponent": {
-      "types": "./dist/HtxComponent.d.ts",
-      "import": "./dist/HtxComponent.mjs",
-      "require": "./dist/HtxComponent.cjs"
-    },
-    "./RootComponent": {
-      "types": "./dist/RootComponent.d.ts",
-      "import": "./dist/RootComponent.mjs",
-      "require": "./dist/RootComponent.cjs"
+    "./cli/generate-web-types": {
+      "require": "./cli/generate-web-types.cjs"
     }
   },
   "files": [

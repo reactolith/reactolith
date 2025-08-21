@@ -1,18 +1,19 @@
 import { createRoot, Root } from "react-dom/client";
-import React, { ElementType } from "react";
-import { RootComponent } from "./RootComponent";
+import React, { ElementType, PropsWithChildren } from "react";
+import { AppProvider } from "./AppProvider";
 import { FetchLike, Router } from "./Router";
+import { HtxComponent } from "./HtxComponent";
 
 export class App {
   public readonly router: Router;
-  private readonly rootComponent: ElementType;
+  private readonly appProvider: ElementType<PropsWithChildren<{ app: App }>>;
   private readonly component: ElementType;
   private readonly selector: (doc: Document) => HTMLElement | null;
   private readonly root: Root;
 
   constructor(
     component: ElementType,
-    rootComponent: ElementType = RootComponent,
+    appProvider: ElementType<PropsWithChildren<{ app: App }>> = AppProvider,
     selector: ((doc: Document) => HTMLElement | null) | string = "#htx-app",
     root?: Root,
     doc: Document = document,
@@ -20,7 +21,7 @@ export class App {
   ) {
     this.router = new Router(this, doc, fetchImp);
     this.component = component;
-    this.rootComponent = rootComponent;
+    this.appProvider = appProvider;
 
     if (typeof selector === "string") {
       const selStr = selector;
@@ -59,11 +60,21 @@ export class App {
 
   public renderElement(element: HTMLElement): void {
     this.root.render(
-      React.createElement(this.rootComponent, {
-        app: this,
-        element,
-        component: this.component,
-      }),
+      React.createElement(
+        this.appProvider,
+        {
+          app: this,
+        },
+        Array.from(element.children)
+          .filter((child) => child instanceof HTMLElement)
+          .map((element, key) =>
+            React.createElement(HtxComponent, {
+              key,
+              element,
+              component: this.component,
+            }),
+          ),
+      ),
     );
   }
 }

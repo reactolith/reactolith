@@ -6,8 +6,8 @@ function testComponent({ is, children }: { is: string; children: ReactNode }) {
   return <pre data-is={is}>{children}</pre>;
 }
 
-function testRoot({ component }: { component: ElementType }) {
-  return <div>{component.name}</div>;
+function testRoot({ app }: { app: App }) {
+  return <div>{app.constructor.name}</div>;
 }
 
 function testPropAndSlotComponent({
@@ -80,7 +80,7 @@ describe("Test mounting an app", () => {
       expect(root).not.toBeEmptyDOMElement();
     });
 
-    expect(root.querySelector("div")).toHaveTextContent("testComponent");
+    expect(root.querySelector("div")).toHaveTextContent("App");
   });
 
   it("Maps all props as expected", async () => {
