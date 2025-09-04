@@ -85,7 +85,7 @@ describe("Test mounting an app", () => {
 
   it("Maps all props as expected", async () => {
     document.body.innerHTML = `
-<div id="htx-app" data-testid="htx-app">
+<div id="htx-app" data-testid="htx-app" class="hidden">
     <my-comp key="fo" enabled name="test" data-foo="baa" as="{div}" json-rows='[{ "label": "Foo", "value": "Baa" }, { "label": "Foo1", "value": "Baa1" }]'>
         This text will be discarded.
         <h1 slot="header">HEADER</h1>
@@ -95,9 +95,11 @@ describe("Test mounting an app", () => {
 
     new App(testPropAndSlotComponent);
     const root = await screen.findByTestId("htx-app");
+    expect(root).toHaveAttribute("class", "hidden");
 
     await waitFor(() => {
       expect(root.querySelector("article")).not.toBeNull();
+      expect(root).not.toHaveAttribute("class", "hidden");
     });
 
     expect(root.querySelector("article")).toHaveAttribute("name", "test");

@@ -1,10 +1,11 @@
 import { createRoot, Root } from "react-dom/client";
 import React, { ElementType, PropsWithChildren } from "react";
-import { AppProvider } from "./AppProvider";
+import { AppProvider } from "./provider/AppProvider";
 import { FetchLike, Router } from "./Router";
 import { HtxComponent } from "./HtxComponent";
 
 export class App {
+  public readonly element: HTMLElement;
   public readonly router: Router;
   private readonly appProvider: ElementType<PropsWithChildren<{ app: App }>>;
   private readonly component: ElementType;
@@ -36,8 +37,9 @@ export class App {
       );
     }
 
-    this.root = root || createRoot(element);
-    this.renderElement(element);
+    this.element = element;
+    this.root = root || createRoot(this.element);
+    this.renderElement(this.element);
   }
 
   public render(document: string | Document): boolean {

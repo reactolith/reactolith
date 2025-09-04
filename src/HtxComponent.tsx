@@ -1,4 +1,5 @@
 import React, { ElementType, ReactNode } from "react";
+import { App } from "./App";
 
 const toPascalCase = (str: string) => {
   return str.replace(/(^\w|-\w)/g, (match) =>

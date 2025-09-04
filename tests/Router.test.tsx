@@ -1,10 +1,11 @@
 import { screen, waitFor, fireEvent } from "@testing-library/dom";
 import { vi } from "vitest";
-import { App, useRouterLoading } from "../src";
+import { App } from "../src";
 import { ReactNode, act } from "react";
+import { useRouter } from "../src/provider/RouterProvider";
 
 function testComponent({ is, children }: { is: string; children: ReactNode }) {
-  const { loading } = useRouterLoading();
+  const { loading } = useRouter();
   return (
     <pre data-is={is} data-loading={loading}>
       {children}
