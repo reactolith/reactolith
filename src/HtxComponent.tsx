@@ -1,5 +1,4 @@
-import React, { ElementType, ReactNode } from "react";
-import { App } from "./App";
+import React, { ElementType, JSX, ReactNode } from "react";
 
 const toPascalCase = (str: string) => {
   return str.replace(/(^\w|-\w)/g, (match) =>
@@ -22,8 +21,8 @@ function getKey(element: HTMLElement): string | undefined {
 function getProps(
   element: HTMLElement,
   component: ElementType,
-): { [key: string]: any } {
-  const props: { [key: string]: any } = {};
+): { [key: string]: unknown } {
+  const props: { [key: string]: unknown } = {};
   Array.from(element.attributes).forEach((attr) => {
     if (attr.name !== "key" && !attr.name.startsWith("#")) {
       let value: ReactNode = attr.value;
@@ -103,25 +102,37 @@ function getChildren(
     .filter(Boolean);
 }
 
-export const HtxComponent: React.FC<{
+type HtxProps<T extends HTMLElement = HTMLElement> = React.HTMLAttributes<T> & {
   element?: HTMLElement;
-  component: ElementType;
-}> = ({ element, component }) => {
-  if (!element) {
-    return null;
-  }
-
-  const tagName = element.tagName.toLowerCase();
-  const children = getChildren(element, component);
-  const isReactComponent =
-    tagName.includes("-") ||
-    document.createElement(tagName).constructor === HTMLUnknownElement;
-  const type = isReactComponent ? component : tagName;
-  const props = {
-    ...getProps(element, component),
-    ...getSlots(element, component),
-    key: getKey(element),
-    ...(isReactComponent ? { is: tagName } : {}),
-  };
-  return React.createElement(type, props, ...children);
+  component: React.ElementType;
 };
+
+export const HtxComponent = React.forwardRef<HTMLElement, HtxProps>(
+  ({ element, component: Component, ...props }, forwardedRef) => {
+    if (!element) return null;
+
+    const tagName = element.tagName.toLowerCase();
+    const children = getChildren(element, Component);
+
+    const isReactComponent =
+      tagName.includes("-") ||
+      document.createElement(tagName).constructor === HTMLUnknownElement;
+
+    const type: React.ElementType = isReactComponent
+      ? Component
+      : (tagName as keyof JSX.IntrinsicElements);
+
+    const allProps = {
+      ...getProps(element, Component),
+      ...getSlots(element, Component),
+      key: getKey(element),
+      ...(isReactComponent ? { is: tagName } : {}),
+      ...props,
+      ref: forwardedRef,
+    };
+
+    return React.createElement(type, allProps, ...children);
+  },
+);
+
+HtxComponent.displayName = "HtxComponent";
