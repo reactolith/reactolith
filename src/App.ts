@@ -7,8 +7,8 @@ import { HtxComponent } from "./HtxComponent";
 export class App {
   public readonly element: HTMLElement;
   public readonly router: Router;
+  public readonly component: ElementType;
   private readonly appProvider: ElementType<PropsWithChildren<{ app: App }>>;
-  private readonly component: ElementType;
   private readonly selector: (doc: Document) => HTMLElement | null;
   private readonly root: Root;
 
