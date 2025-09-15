@@ -1,6 +1,6 @@
 {
   "name": "react-htx",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "Use HTML on the server to compose your react application.",
   "license": "MIT",
   "author": "Franz Mayr-Wilding",
@@ -43,6 +43,7 @@
     "build": "npm run clean && npm run build:rollup",
     "build:rollup": "rollup -c",
     "typecheck": "tsc --noEmit",
+    "build:release": "npm install && npm ci --dev && npm run typecheck && npm test -- --run && npm run build --if-present",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest run --coverage"
