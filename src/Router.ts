@@ -140,9 +140,13 @@ export class Router {
     const response = await this.fetch(input, init);
     const html = await response.text();
 
+    const original = typeof input === "string" ? input : input.toString();
+    const finalUrl = response.redirected ? response.url : original;
+
     if (pushState) {
-      history.pushState({}, "", input);
+      history.pushState({}, "", finalUrl);
     }
+
     const result = this.app.render(html);
     this.emit("nav:ended", input, init, pushState, response, html);
     return result;
