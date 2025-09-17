@@ -128,6 +128,7 @@ export class Router {
     input: URL | string,
     init: RequestInit = { method: "GET" },
     pushState: boolean = true,
+    replaceOnError: boolean = true,
   ): Promise<boolean> {
     this.emit("nav:started", input, init, pushState);
     const response = await this.fetch(input, init);
@@ -136,12 +137,16 @@ export class Router {
     const original = typeof input === "string" ? input : input.toString();
     const finalUrl = response.redirected ? response.url : original;
 
-    const result = this.app.render(html, finalUrl);
+    if (pushState) {
+      history.pushState({}, "", original);
+    }
+
+    const result = this.app.render(html, replaceOnError);
     const event = result ? "render:success" : "render:failed";
     this.emit(event, input, init, pushState, response, html, finalUrl);
 
-    if (result && pushState) {
-      history.pushState({}, "", finalUrl);
+    if (pushState && finalUrl !== original) {
+      history.replaceState({}, "", finalUrl);
     }
 
     this.emit("nav:ended", input, init, pushState, response, html, finalUrl);

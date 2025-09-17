@@ -5,7 +5,6 @@ import { FetchLike, Router } from "./Router";
 import { HtxComponent } from "./HtxComponent";
 
 export class App {
-  private _replaceSiteOnRenderFailure = true;
   public readonly element: HTMLElement;
   public readonly router: Router;
   public readonly component: ElementType;
@@ -21,13 +20,11 @@ export class App {
     root?: Root,
     doc: Document = document,
     fetchImp: FetchLike = fetch,
-    replaceSiteOnRenderFailure = true,
   ) {
     this.router = new Router(this, doc, fetchImp);
     this.component = component;
     this.appProvider = appProvider;
     this.doc = doc;
-    this._replaceSiteOnRenderFailure = replaceSiteOnRenderFailure;
 
     if (typeof selector === "string") {
       const selStr = selector;
@@ -47,7 +44,10 @@ export class App {
     this.renderElement(this.element);
   }
 
-  public render(document: string | Document, redirectUrl?: string): boolean {
+  public render(
+    document: string | Document,
+    replaceOnError: boolean = true,
+  ): boolean {
     if (typeof document === "string") {
       const parser = new DOMParser();
       document = parser.parseFromString(document, "text/html");
@@ -57,12 +57,10 @@ export class App {
     const element = this.selector(document);
 
     if (!element) {
-      if (
-        this.replaceSiteOnRenderFailure &&
-        redirectUrl &&
-        this.doc.defaultView
-      ) {
-        this.doc.defaultView.location.href = redirectUrl;
+      if (replaceOnError) {
+        this.doc.open();
+        this.doc.write(document.documentElement.outerHTML);
+        this.doc.close();
       }
 
       return false;
@@ -91,13 +89,5 @@ export class App {
           ),
       ),
     );
-  }
-
-  get replaceSiteOnRenderFailure(): boolean {
-    return this._replaceSiteOnRenderFailure;
-  }
-
-  set replaceSiteOnRenderFailure(value: boolean) {
-    this._replaceSiteOnRenderFailure = value;
   }
 }
