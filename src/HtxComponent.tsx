@@ -21,6 +21,7 @@ function getKey(element: HTMLElement): string | undefined {
 function getProps(
   element: HTMLElement,
   component: ElementType,
+  isReactComponent: boolean = true,
 ): { [key: string]: unknown } {
   const props: { [key: string]: unknown } = {};
   Array.from(element.attributes).forEach((attr) => {
@@ -38,6 +39,8 @@ function getProps(
 
       if (attr.name.startsWith("json-")) {
         props[normalizePropName(attr.name)] = JSON.parse(attr.value);
+      } else if (!isReactComponent && attr.name.startsWith("data-")) {
+        props[attr.name] = attr.value;
       } else {
         // Special case: Empty value will be transformed to bool true value
         if (typeof value === "string" && value.length === 0) {
@@ -123,7 +126,7 @@ export const HtxComponent = React.forwardRef<HTMLElement, HtxProps>(
       : (tagName as keyof JSX.IntrinsicElements);
 
     const allProps = {
-      ...getProps(element, Component),
+      ...getProps(element, Component, isReactComponent),
       ...getSlots(element, Component),
       key: getKey(element),
       ...(isReactComponent ? { is: tagName } : {}),

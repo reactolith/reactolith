@@ -19,6 +19,21 @@ export type RouterEventMap = {
   ];
 };
 
+export const isRelativeHref = (href: string | null): href is string => {
+  if (!href) return false;
+  if (href.startsWith("#")) return false;
+  if (href.startsWith("//")) return false;
+  return !/^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(href);
+};
+
+export const hasNavBypassModifiers = (e: MouseEvent) =>
+  e.defaultPrevented ||
+  e.button !== 0 ||
+  e.metaKey ||
+  e.ctrlKey ||
+  e.shiftKey ||
+  e.altKey;
+
 export class Router {
   private readonly app: App;
   private readonly fetch: FetchLike;
@@ -47,47 +62,8 @@ export class Router {
       });
     }
 
-    doc.addEventListener("click", async (event) => {
-      const link = (event.target as HTMLElement).closest("a");
-      if (!link) {
-        return;
-      }
-      const href = link.getAttribute("href");
-      if (
-        !href ||
-        href.startsWith("http") ||
-        href.startsWith("#") ||
-        link.target === "_blank"
-      ) {
-        return;
-      }
-      event.preventDefault();
-      await this.visit(href);
-    });
-
-    doc.addEventListener("submit", async (event) => {
-      const form = event.target as HTMLFormElement;
-      if (!form.action || form.target === "_blank") {
-        return;
-      }
-
-      event.preventDefault();
-      const formData = new FormData(form);
-      const method = (form.method || "GET").toUpperCase();
-      let body: BodyInit | null = null;
-      let url = form.action;
-
-      if (method === "GET") {
-        const params = new URLSearchParams(
-          Array.from(formData.entries()) as [string, string][],
-        ).toString();
-        url = url.includes("?") ? `${url}&${params}` : `${url}?${params}`;
-      } else {
-        body = formData;
-      }
-
-      await this.visit(url, { method, body });
-    });
+    doc.addEventListener("click", (e) => this.onClick(e));
+    doc.addEventListener("submit", (e) => this.onSubmit(e));
   }
 
   private ensureSet<K extends keyof RouterEventMap>(
@@ -150,6 +126,66 @@ export class Router {
     const result = this.app.render(html);
     this.emit("nav:ended", input, init, pushState, response, html);
     return result;
+  }
+
+  public async onClick(event: MouseEvent) {
+    // Ignore modified clicks, right/middle clicks, already-handled events
+    if (hasNavBypassModifiers(event)) return;
+
+    const link = (event.target as HTMLElement | null)?.closest("a");
+    if (!link) return;
+
+    const hrefAttr = link.getAttribute("href");
+    if (!isRelativeHref(hrefAttr)) return;
+
+    // Respect targets like _blank or any non-_self
+    if (link.target && link.target.toLowerCase() !== "_self") return;
+
+    // Respect downloads and explicit external hints
+    if (link.hasAttribute("download")) return;
+    const rel = link.getAttribute("rel") || "";
+    if (/\bexternal\b/i.test(rel)) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    await this.visit(hrefAttr);
+  }
+
+  public async onSubmit(event: SubmitEvent) {
+    const form = event.target as HTMLFormElement;
+    if (!form) return;
+
+    const actionAttr = form.getAttribute("action");
+    const isRelativeAction = actionAttr === null || isRelativeHref(actionAttr);
+
+    if (form.target && form.target.toLowerCase() !== "_self") return;
+    if (!isRelativeAction) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const formData = new FormData(form);
+    const method = (form.method || "GET").toUpperCase();
+    let body: BodyInit | null = null;
+    let url = actionAttr ?? "";
+
+    if (method === "GET") {
+      const params = new URLSearchParams();
+      formData.forEach((value, key) => {
+        if (typeof value === "string") params.append(key, value);
+      });
+      const q = params.toString();
+      const sep = url.includes("?") ? (q ? "&" : "") : q ? "?" : "";
+      url = `${url}${sep}${q}`;
+    } else {
+      body = formData;
+    }
+
+    await this.visit(url || location.pathname + location.search, {
+      method,
+      body,
+    });
   }
 
   public async navigate(path: Href): Promise<void> {

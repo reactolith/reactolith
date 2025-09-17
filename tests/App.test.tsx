@@ -89,7 +89,11 @@ describe("Test mounting an app", () => {
     <my-comp key="fo" enabled name="test" data-foo="baa" as="{div}" json-rows='[{ "label": "Foo", "value": "Baa" }, { "label": "Foo1", "value": "Baa1" }]'>
         This text will be discarded.
         <h1 slot="header">HEADER</h1>
-        <template slot="footer"><h4>FOOTER!</h4><h5>Other element</h5></template>
+        <template slot="footer">
+            <h4>FOOTER!</h4>
+            <h5>Other element</h5>
+            <div class="data-native" data-native="true"></div>
+        </template>
     </my-comp>
 </div>`;
 
@@ -106,6 +110,10 @@ describe("Test mounting an app", () => {
     expect(root.querySelector("article")).toHaveAttribute("foo", "baa");
     expect(root.querySelector("article h2")).not.toBeNull();
     expect(root.querySelector("article dl")).not.toBeNull();
+    expect(root.querySelector("div.data-native")).toHaveAttribute(
+      "data-native",
+      "true",
+    );
     expect(
       root.querySelector("article dl div:first-child dt"),
     ).toHaveTextContent("Foo");
