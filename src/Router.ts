@@ -16,6 +16,23 @@ export type RouterEventMap = {
     pushState: boolean,
     response: Response,
     html: string,
+    finalUrl: string,
+  ];
+  "render:success": [
+    input: URL | string,
+    init: RequestInit,
+    pushState: boolean,
+    response: Response,
+    html: string,
+    finalUrl: string,
+  ];
+  "render:failed": [
+    input: URL | string,
+    init: RequestInit,
+    pushState: boolean,
+    response: Response,
+    html: string,
+    finalUrl: string,
   ];
 };
 
@@ -119,12 +136,15 @@ export class Router {
     const original = typeof input === "string" ? input : input.toString();
     const finalUrl = response.redirected ? response.url : original;
 
-    if (pushState) {
+    const result = this.app.render(html, finalUrl);
+    const event = result ? "render:success" : "render:failed";
+    this.emit(event, input, init, pushState, response, html, finalUrl);
+
+    if (result && pushState) {
       history.pushState({}, "", finalUrl);
     }
 
-    const result = this.app.render(html);
-    this.emit("nav:ended", input, init, pushState, response, html);
+    this.emit("nav:ended", input, init, pushState, response, html, finalUrl);
     return result;
   }
 
