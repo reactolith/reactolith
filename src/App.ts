@@ -44,10 +44,7 @@ export class App {
     this.renderElement(this.element);
   }
 
-  public render(
-    document: string | Document,
-    replaceOnError: boolean = true,
-  ): boolean {
+  public render(document: string | Document): boolean {
     if (typeof document === "string") {
       const parser = new DOMParser();
       document = parser.parseFromString(document, "text/html");
@@ -57,12 +54,6 @@ export class App {
     const element = this.selector(document);
 
     if (!element) {
-      if (replaceOnError) {
-        this.doc.open();
-        this.doc.write(document.documentElement.outerHTML);
-        this.doc.close();
-      }
-
       return false;
     }
 
