@@ -190,6 +190,11 @@ export class Router {
     event.stopPropagation();
 
     const formData = new FormData(form);
+
+    if (event.submitter instanceof HTMLButtonElement && event.submitter.name) {
+      formData.append(event.submitter.name, event.submitter.value || "");
+    }
+
     const method = (form.method || "GET").toUpperCase();
     let body: BodyInit | null = null;
     let url = actionAttr ?? "";
