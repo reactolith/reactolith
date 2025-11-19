@@ -188,6 +188,90 @@ When the user navigates to a different route, Mercure automatically reconnects w
 | `render:failed` | `event, html` | Render failed (no root element) |
 | `sse:error` | `error` | Connection error |
 
+### Custom Live Regions (Partial Updates)
+
+For partial updates (e.g., updating a sidebar across all pages), you can create your own live region component. The `mercureConfig` is accessible via `useApp()`:
+
+**Setup:**
+```typescript
+import { App, Mercure } from "react-htx";
+
+const app = new App(component);
+const mercure = new Mercure(app);
+
+// Store config for components to access
+app.mercureConfig = {
+  hubUrl: "/.well-known/mercure",
+  withCredentials: true,
+};
+
+mercure.subscribe(app.mercureConfig);
+```
+
+**Custom MercureLive Component:**
+```tsx
+import { useState, useEffect, ReactNode } from 'react';
+import { useApp, HtxComponent } from 'react-htx';
+
+interface MercureLiveProps {
+  topic: string;
+  children: ReactNode;
+}
+
+export function MercureLive({ topic, children }: MercureLiveProps) {
+  const app = useApp();
+  const [content, setContent] = useState<ReactNode>(children);
+
+  useEffect(() => {
+    if (!app.mercureConfig) return;
+
+    const url = new URL(app.mercureConfig.hubUrl);
+    url.searchParams.append('topic', topic);
+
+    const eventSource = new EventSource(url.toString(), {
+      withCredentials: app.mercureConfig.withCredentials,
+    });
+
+    eventSource.onmessage = (event) => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(event.data, 'text/html');
+      const element = doc.body.firstElementChild as HTMLElement;
+
+      if (element) {
+        setContent(
+          <HtxComponent element={element} component={app.component} />
+        );
+      }
+    };
+
+    return () => eventSource.close();
+  }, [topic, app]);
+
+  return <>{content}</>;
+}
+```
+
+**Usage in Templates:**
+```html
+<div id="htx-app">
+  <nav-menu key="nav">...</nav-menu>
+
+  <!-- This region updates independently via /sidebar topic -->
+  <mercure-live topic="/sidebar">
+    <sidebar-component>Initial content</sidebar-component>
+  </mercure-live>
+
+  <main-content key="main">...</main-content>
+</div>
+```
+
+**Backend - Push to Topic:**
+```php
+// Push sidebar update to all clients (regardless of current route)
+$update = new Update('/sidebar', $sidebarHtml);
+$hub->publish($update);
+```
+
 ---
 
 ## Props
