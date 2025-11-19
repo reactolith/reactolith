@@ -250,15 +250,52 @@ Here's a complete example showing how to use `react-htx` with Symfony, including
 composer require symfony/mercure-bundle
 ```
 
+**MercurePublisher Service:**
+```php
+// src/Service/MercurePublisher.php
+namespace App\Service;
+
+use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Mercure\HubInterface;
+use Symfony\Component\Mercure\Update;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+
+class MercurePublisher
+{
+    public function __construct(
+        private HttpKernelInterface $kernel,
+        private HubInterface $hub,
+        private UrlGeneratorInterface $urlGenerator,
+    ) {}
+
+    /**
+     * Render a route and push the HTML to all clients viewing that page
+     */
+    public function pushRoute(string $routeName, array $parameters = []): void
+    {
+        // Generate the pathname for this route
+        $pathname = $this->urlGenerator->generate($routeName, $parameters);
+
+        // Create an internal request to render the route
+        $request = Request::create($pathname);
+        $response = $this->kernel->handle($request, HttpKernelInterface::SUB_REQUEST);
+
+        // Publish the rendered HTML to Mercure
+        $update = new Update($pathname, $response->getContent());
+        $this->hub->publish($update);
+    }
+}
+```
+
 **Controller:**
 ```php
 // src/Controller/DashboardController.php
 namespace App\Controller;
 
+use App\Service\MercurePublisher;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Mercure\HubInterface;
-use Symfony\Component\Mercure\Update;
 use Symfony\Component\Routing\Annotation\Route;
 
 class DashboardController extends AbstractController
@@ -273,23 +310,35 @@ class DashboardController extends AbstractController
     }
 
     #[Route('/task/complete/{id}', name: 'task_complete', methods: ['POST'])]
-    public function completeTask(int $id, HubInterface $hub): Response
+    public function completeTask(int $id, MercurePublisher $publisher): Response
     {
         $task = $this->getTaskRepository()->find($id);
         $task->setCompleted(true);
         $this->entityManager->flush();
 
-        // Push full page update to all clients viewing /dashboard
-        $html = $this->renderView('dashboard/index.html.twig', [
-            'tasks' => $this->getTaskRepository()->findAll(),
-            'stats' => $this->getStats(),
-        ]);
+        // Push the dashboard to all clients viewing it
+        $publisher->pushRoute('dashboard');
 
-        $update = new Update(
-            '/dashboard',  // Topic = page pathname
-            $html          // Full page HTML
-        );
-        $hub->publish($update);
+        return new Response('OK');
+    }
+
+    #[Route('/user/{id}', name: 'user_profile')]
+    public function userProfile(int $id): Response
+    {
+        return $this->render('user/profile.html.twig', [
+            'user' => $this->getUserRepository()->find($id),
+        ]);
+    }
+
+    #[Route('/user/{id}/update', name: 'user_update', methods: ['POST'])]
+    public function updateUser(int $id, MercurePublisher $publisher): Response
+    {
+        $user = $this->getUserRepository()->find($id);
+        // ... update user
+        $this->entityManager->flush();
+
+        // Push the user profile to all clients viewing it
+        $publisher->pushRoute('user_profile', ['id' => $id]);
 
         return new Response('OK');
     }
