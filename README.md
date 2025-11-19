@@ -224,6 +224,7 @@ export function useMercureTopic<T>(topic: string, initialValue: T): T {
 
 **Usage:**
 ```tsx
+// Simple types - inferred from initial value
 function NotificationBadge() {
   const count = useMercureTopic('/notifications/count', 0);
 
@@ -231,9 +232,36 @@ function NotificationBadge() {
   return <span className="badge">{count}</span>;
 }
 
+// Explicit type parameter
 function UserStatus({ userId }: { userId: number }) {
-  const status = useMercureTopic(`/user/${userId}/status`, 'offline');
+  const status = useMercureTopic<'online' | 'offline' | 'away'>(
+    `/user/${userId}/status`,
+    'offline'
+  );
   return <span className={status}>{status}</span>;
+}
+
+// Complex types with interfaces
+interface DashboardStats {
+  visitors: number;
+  sales: number;
+  conversion: number;
+}
+
+function Dashboard() {
+  const stats = useMercureTopic<DashboardStats>('/dashboard/stats', {
+    visitors: 0,
+    sales: 0,
+    conversion: 0,
+  });
+
+  return (
+    <div>
+      <span>Visitors: {stats.visitors}</span>
+      <span>Sales: {stats.sales}</span>
+      <span>Conversion: {stats.conversion}%</span>
+    </div>
+  );
 }
 ```
 
