@@ -188,6 +188,64 @@ When the user navigates to a different route, Mercure automatically reconnects w
 | `render:failed` | `event, html` | Render failed (no root element) |
 | `sse:error` | `error` | Connection error |
 
+### Custom Hooks for Live Data
+
+For simple live values (like notification counts), create a custom hook. The `mercureConfig` is accessible via `useApp()`:
+
+**useMercureTopic Hook:**
+```tsx
+import { useState, useEffect } from 'react';
+import { useApp } from 'react-htx';
+
+export function useMercureTopic<T>(topic: string, initialValue: T): T {
+  const app = useApp();
+  const [value, setValue] = useState<T>(initialValue);
+
+  useEffect(() => {
+    if (!app.mercureConfig) return;
+
+    const url = new URL(app.mercureConfig.hubUrl);
+    url.searchParams.append('topic', topic);
+
+    const eventSource = new EventSource(url.toString(), {
+      withCredentials: app.mercureConfig.withCredentials,
+    });
+
+    eventSource.onmessage = (event) => {
+      setValue(JSON.parse(event.data));
+    };
+
+    return () => eventSource.close();
+  }, [topic, app]);
+
+  return value;
+}
+```
+
+**Usage:**
+```tsx
+function NotificationBadge() {
+  const count = useMercureTopic('/notifications/count', 0);
+
+  if (count === 0) return null;
+  return <span className="badge">{count}</span>;
+}
+
+function UserStatus({ userId }: { userId: number }) {
+  const status = useMercureTopic(`/user/${userId}/status`, 'offline');
+  return <span className={status}>{status}</span>;
+}
+```
+
+**Backend:**
+```php
+// Push JSON data to topic
+$hub->publish(new Update(
+    '/notifications/count',
+    json_encode(42)
+));
+```
+
 ### Custom Live Regions (Partial Updates)
 
 For partial updates (e.g., updating a sidebar across all pages), you can create your own live region component. The `mercureConfig` is accessible via `useApp()`:
