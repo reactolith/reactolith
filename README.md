@@ -144,16 +144,17 @@ Only the `<h1>` text and the `pressed` prop are updated — everything else rema
 
 `react-htx` supports **Server-Sent Events (SSE)** via [Mercure](https://mercure.rocks/) for real-time updates from your backend. When the server publishes an update, the HTML is automatically rendered — just like with router navigation.
 
+Mercure automatically subscribes to the **current URL pathname** as the topic and re-subscribes when the route changes.
+
 ```typescript
 import { App, Mercure } from "react-htx";
 
 const app = new App(component);
 const mercure = new Mercure(app);
 
-// Subscribe to Mercure hub
+// Subscribe to Mercure hub (uses current pathname as topic)
 mercure.subscribe({
   hubUrl: "https://example.com/.well-known/mercure",
-  topics: ["/updates/dashboard", "/notifications"],
   withCredentials: true,  // Include cookies for authentication
 });
 
@@ -173,6 +174,8 @@ mercure.on("sse:error", (error) => {
 // Close connection when done
 mercure.close();
 ```
+
+When the user navigates to a different route, Mercure automatically reconnects with the new pathname as the topic.
 
 ### Mercure Events
 
@@ -276,29 +279,16 @@ class DashboardController extends AbstractController
         $task->setCompleted(true);
         $this->entityManager->flush();
 
-        // Push update to all connected clients
-        $html = $this->renderView('dashboard/_task_list.html.twig', [
+        // Push full page update to all clients viewing /dashboard
+        $html = $this->renderView('dashboard/index.html.twig', [
             'tasks' => $this->getTaskRepository()->findAll(),
+            'stats' => $this->getStats(),
         ]);
 
         $update = new Update(
-            '/dashboard/tasks',  // Topic
-            $html                // HTML payload
+            '/dashboard',  // Topic = page pathname
+            $html          // Full page HTML
         );
-        $hub->publish($update);
-
-        return new Response('OK');
-    }
-
-    #[Route('/notification/send', name: 'send_notification', methods: ['POST'])]
-    public function sendNotification(HubInterface $hub): Response
-    {
-        $html = $this->renderView('components/_notification.html.twig', [
-            'message' => 'New task assigned to you!',
-            'type' => 'info',
-        ]);
-
-        $update = new Update('/notifications', $html);
         $hub->publish($update);
 
         return new Response('OK');
@@ -416,9 +406,9 @@ const mercure = new Mercure(app);
 const hubUrl = document.querySelector('meta[name="mercure-hub"]')?.getAttribute('content');
 
 if (hubUrl) {
+    // Subscribe using current pathname as topic (auto re-subscribes on route change)
     mercure.subscribe({
         hubUrl,
-        topics: ['/dashboard/tasks', '/notifications'],
         withCredentials: true,
     });
 

@@ -57,6 +57,7 @@ class MockEventSource {
 describe("Mercure SSE integration", () => {
   let mockEventSource: MockEventSource | null = null;
   const originalEventSource = global.EventSource;
+  const originalLocation = window.location;
 
   beforeEach(() => {
     // Mock EventSource globally
@@ -67,11 +68,21 @@ describe("Mercure SSE integration", () => {
     (global.EventSource as any).CONNECTING = 0;
     (global.EventSource as any).OPEN = 1;
     (global.EventSource as any).CLOSED = 2;
+
+    // Mock window.location
+    Object.defineProperty(window, "location", {
+      value: { pathname: "/dashboard" },
+      writable: true,
+    });
   });
 
   afterEach(() => {
     global.EventSource = originalEventSource;
     mockEventSource = null;
+    Object.defineProperty(window, "location", {
+      value: originalLocation,
+      writable: true,
+    });
   });
 
   it("creates a Mercure instance", async () => {
@@ -86,7 +97,7 @@ describe("Mercure SSE integration", () => {
     expect(mercure.connected).toBe(false);
   });
 
-  it("subscribes to a Mercure hub", async () => {
+  it("subscribes to Mercure hub using current pathname", async () => {
     document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
       <my-component>Initial</my-component>
     </div>`;
@@ -96,31 +107,34 @@ describe("Mercure SSE integration", () => {
 
     mercure.subscribe({
       hubUrl: "https://example.com/.well-known/mercure",
-      topics: "/updates",
     });
 
     expect(global.EventSource).toHaveBeenCalledWith(
-      "https://example.com/.well-known/mercure?topic=%2Fupdates",
+      "https://example.com/.well-known/mercure?topic=%2Fdashboard",
       { withCredentials: false },
     );
   });
 
-  it("subscribes to multiple topics", async () => {
+  it("uses different pathnames as topics", async () => {
     document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
       <my-component>Initial</my-component>
     </div>`;
+
+    // Change pathname
+    Object.defineProperty(window, "location", {
+      value: { pathname: "/users/123" },
+      writable: true,
+    });
 
     const app = new App(testComponent);
     const mercure = new Mercure(app);
 
     mercure.subscribe({
       hubUrl: "https://example.com/.well-known/mercure",
-      topics: ["/updates", "/notifications"],
     });
 
     const calledUrl = (global.EventSource as any).mock.calls[0][0];
-    expect(calledUrl).toContain("topic=%2Fupdates");
-    expect(calledUrl).toContain("topic=%2Fnotifications");
+    expect(calledUrl).toContain("topic=%2Fusers%2F123");
   });
 
   it("emits sse:connected when connection opens", async () => {
@@ -136,7 +150,6 @@ describe("Mercure SSE integration", () => {
 
     mercure.subscribe({
       hubUrl: "https://example.com/.well-known/mercure",
-      topics: "/updates",
     });
 
     mockEventSource!.simulateOpen();
@@ -155,7 +168,6 @@ describe("Mercure SSE integration", () => {
 
     mercure.subscribe({
       hubUrl: "https://example.com/.well-known/mercure",
-      topics: "/updates",
     });
 
     mockEventSource!.simulateOpen();
@@ -190,7 +202,6 @@ describe("Mercure SSE integration", () => {
 
     mercure.subscribe({
       hubUrl: "https://example.com/.well-known/mercure",
-      topics: "/updates",
     });
 
     mockEventSource!.simulateOpen();
@@ -219,7 +230,6 @@ describe("Mercure SSE integration", () => {
 
     mercure.subscribe({
       hubUrl: "https://example.com/.well-known/mercure",
-      topics: "/updates",
     });
 
     mockEventSource!.simulateOpen();
@@ -249,7 +259,6 @@ describe("Mercure SSE integration", () => {
 
     mercure.subscribe({
       hubUrl: "https://example.com/.well-known/mercure",
-      topics: "/updates",
     });
 
     mockEventSource!.simulateOpen();
@@ -274,7 +283,6 @@ describe("Mercure SSE integration", () => {
 
     mercure.subscribe({
       hubUrl: "https://example.com/.well-known/mercure",
-      topics: "/updates",
     });
 
     mockEventSource!.simulateError();
@@ -295,7 +303,6 @@ describe("Mercure SSE integration", () => {
 
     mercure.subscribe({
       hubUrl: "https://example.com/.well-known/mercure",
-      topics: "/updates",
     });
 
     mockEventSource!.simulateOpen();
@@ -321,7 +328,6 @@ describe("Mercure SSE integration", () => {
 
     mercure.subscribe({
       hubUrl: "https://example.com/.well-known/mercure",
-      topics: "/updates",
     });
 
     mockEventSource!.simulateOpen();
@@ -343,7 +349,6 @@ describe("Mercure SSE integration", () => {
 
     mercure.subscribe({
       hubUrl: "https://example.com/.well-known/mercure",
-      topics: "/updates",
     });
 
     mockEventSource!.simulateOpen();
@@ -351,7 +356,7 @@ describe("Mercure SSE integration", () => {
     expect(handler).not.toHaveBeenCalled();
   });
 
-  it("closes previous connection when subscribing again", async () => {
+  it("re-subscribes when router navigates", async () => {
     document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
       <my-component>Initial</my-component>
     </div>`;
@@ -364,20 +369,26 @@ describe("Mercure SSE integration", () => {
 
     mercure.subscribe({
       hubUrl: "https://example.com/.well-known/mercure",
-      topics: "/updates",
     });
 
     const firstEventSource = mockEventSource;
     mockEventSource!.simulateOpen();
 
-    // Subscribe again
-    mercure.subscribe({
-      hubUrl: "https://example.com/.well-known/mercure",
-      topics: "/other",
+    // Simulate route change
+    Object.defineProperty(window, "location", {
+      value: { pathname: "/new-route" },
+      writable: true,
     });
+
+    // Emit router's render:success event (cast to any for testing protected method)
+    (app.router as any).emit("render:success", "/new-route", {}, true, new Response(), "<html></html>", "/new-route");
 
     expect(firstEventSource!.readyState).toBe(MockEventSource.CLOSED);
     expect(disconnectedHandler).toHaveBeenCalledTimes(1);
+
+    // Verify new subscription uses new pathname
+    const calledUrl = (global.EventSource as any).mock.calls[1][0];
+    expect(calledUrl).toContain("topic=%2Fnew-route");
   });
 
   it("includes withCredentials option", async () => {
@@ -390,7 +401,6 @@ describe("Mercure SSE integration", () => {
 
     mercure.subscribe({
       hubUrl: "https://example.com/.well-known/mercure",
-      topics: "/updates",
       withCredentials: true,
     });
 
@@ -410,7 +420,6 @@ describe("Mercure SSE integration", () => {
 
     mercure.subscribe({
       hubUrl: "https://example.com/.well-known/mercure",
-      topics: "/updates",
       lastEventId: "abc123",
     });
 
@@ -430,10 +439,36 @@ describe("Mercure SSE integration", () => {
 
     mercure.subscribe({
       hubUrl: "https://example.com/.well-known/mercure",
-      topics: "/updates",
     });
 
     expect(mercure.url).toContain("example.com");
-    expect(mercure.url).toContain("topic=%2Fupdates");
+    expect(mercure.url).toContain("topic=%2Fdashboard");
+  });
+
+  it("cleans up router listener on close", async () => {
+    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+      <my-component>Initial</my-component>
+    </div>`;
+
+    const app = new App(testComponent);
+    const mercure = new Mercure(app);
+
+    mercure.subscribe({
+      hubUrl: "https://example.com/.well-known/mercure",
+    });
+
+    mockEventSource!.simulateOpen();
+    mercure.close();
+
+    // Simulate route change after close - should not create new connection
+    Object.defineProperty(window, "location", {
+      value: { pathname: "/new-route" },
+      writable: true,
+    });
+
+    (app.router as any).emit("render:success", "/new-route", {}, true, new Response(), "<html></html>", "/new-route");
+
+    // Should still only have 1 call (the initial one)
+    expect(global.EventSource).toHaveBeenCalledTimes(1);
   });
 });

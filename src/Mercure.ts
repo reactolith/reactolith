@@ -14,8 +14,6 @@ export type MercureEventMap = {
 export type MercureOptions = {
   /** The Mercure hub URL to connect to */
   hubUrl: string;
-  /** Topics to subscribe to */
-  topics: string | string[];
   /** Optional: Last-Event-ID for reconnection */
   lastEventId?: string;
   /** Optional: Whether to include credentials (cookies) */
@@ -32,6 +30,8 @@ export class Mercure {
     >
   > = {};
   private currentUrl: string | null = null;
+  private options: MercureOptions | null = null;
+  private routerUnsubscribe: (() => void) | null = null;
 
   constructor(app: App) {
     this.app = app;
@@ -78,18 +78,48 @@ export class Mercure {
   }
 
   /**
-   * Subscribe to a Mercure hub for real-time updates
+   * Subscribe to a Mercure hub for real-time updates.
+   * Automatically subscribes to the current pathname and re-subscribes on route changes.
    */
   subscribe(options: MercureOptions): void {
+    // Store options for re-subscription
+    this.options = options;
+
+    // Unsubscribe from previous router listener
+    if (this.routerUnsubscribe) {
+      this.routerUnsubscribe();
+    }
+
+    // Listen to router navigation to re-subscribe with new pathname
+    this.routerUnsubscribe = this.app.router.on("render:success", () => {
+      this.connectToCurrentPath();
+    });
+
+    // Connect to current path
+    this.connectToCurrentPath();
+  }
+
+  /**
+   * Connect to EventSource with current pathname as topic
+   */
+  private connectToCurrentPath(): void {
+    if (!this.options) return;
+
     // Close existing connection if any
-    this.close();
+    if (this.eventSource) {
+      this.eventSource.close();
+      if (this.currentUrl) {
+        this.emit("sse:disconnected", this.currentUrl);
+      }
+      this.eventSource = null;
+    }
 
-    const { hubUrl, topics, lastEventId, withCredentials = false } = options;
+    const { hubUrl, lastEventId, withCredentials = false } = this.options;
 
-    // Build the subscription URL
+    // Build the subscription URL with current pathname as topic
     const url = new URL(hubUrl);
-    const topicArray = Array.isArray(topics) ? topics : [topics];
-    topicArray.forEach((topic) => url.searchParams.append("topic", topic));
+    const topic = window.location.pathname;
+    url.searchParams.append("topic", topic);
 
     if (lastEventId) {
       url.searchParams.set("lastEventID", lastEventId);
@@ -134,6 +164,12 @@ export class Mercure {
    * Close the SSE connection
    */
   close(): void {
+    // Unsubscribe from router events
+    if (this.routerUnsubscribe) {
+      this.routerUnsubscribe();
+      this.routerUnsubscribe = null;
+    }
+
     if (this.eventSource) {
       this.eventSource.close();
       if (this.currentUrl) {
@@ -142,6 +178,8 @@ export class Mercure {
       this.eventSource = null;
       this.currentUrl = null;
     }
+
+    this.options = null;
   }
 
   /**
