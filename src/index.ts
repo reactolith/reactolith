@@ -7,3 +7,5 @@ export { HtxComponent } from "./HtxComponent";
 export { AppProvider, useApp } from "./provider/AppProvider";
 export { RouterProvider, useRouter } from "./provider/RouterProvider";
 export { useMercureTopic } from "./useMercureTopic";
+export { MercureLive } from "./MercureLive";
+export type { MercureLiveProps } from "./MercureLive";
