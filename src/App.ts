@@ -4,10 +4,16 @@ import { AppProvider } from "./provider/AppProvider";
 import { FetchLike, Router } from "./Router";
 import { HtxComponent } from "./HtxComponent";
 
+export type MercureConfig = {
+  hubUrl: string;
+  withCredentials?: boolean;
+};
+
 export class App {
   public readonly element: HTMLElement;
   public readonly router: Router;
   public readonly component: ElementType;
+  public mercureConfig?: MercureConfig;
   private readonly appProvider: ElementType<PropsWithChildren<{ app: App }>>;
   private readonly selector: (doc: Document) => HTMLElement | null;
   private readonly root: Root;

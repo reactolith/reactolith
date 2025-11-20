@@ -140,6 +140,206 @@ Only the `<h1>` text and the `pressed` prop are updated — everything else rema
 
 ---
 
+## 📡 Real-time Updates with Mercure
+
+`react-htx` supports **Server-Sent Events (SSE)** via [Mercure](https://mercure.rocks/) for real-time updates from your backend. When the server publishes an update, the HTML is automatically rendered — just like with router navigation.
+
+Mercure automatically subscribes to the **current URL pathname** as the topic and re-subscribes when the route changes.
+
+```typescript
+import { App, Mercure } from "react-htx";
+
+const app = new App(component);
+const mercure = new Mercure(app);
+
+// Subscribe to Mercure hub (uses current pathname as topic)
+mercure.subscribe({
+  hubUrl: "https://example.com/.well-known/mercure",
+  withCredentials: true,  // Include cookies for authentication
+});
+
+// Listen to events
+mercure.on("sse:connected", (url) => {
+  console.log("Connected to Mercure hub");
+});
+
+mercure.on("render:success", (event, html) => {
+  console.log("UI updated from server push");
+});
+
+mercure.on("sse:error", (error) => {
+  console.error("Connection error, will retry...");
+});
+
+// Close connection when done
+mercure.close();
+```
+
+When the user navigates to a different route, Mercure automatically reconnects with the new pathname as the topic.
+
+### Mercure Events
+
+| Event | Arguments | Description |
+|-------|-----------|-------------|
+| `sse:connected` | `url` | Connection established |
+| `sse:disconnected` | `url` | Connection closed |
+| `sse:message` | `event, html` | Message received |
+| `render:success` | `event, html` | HTML rendered successfully |
+| `render:failed` | `event, html` | Render failed (no root element) |
+| `sse:error` | `error` | Connection error |
+
+### Live Data with useMercureTopic
+
+For simple live values (like notification counts, user status), use the `useMercureTopic` hook to subscribe to Mercure topics that send JSON data:
+
+```tsx
+import { useMercureTopic } from 'react-htx';
+
+// Simple types - inferred from initial value
+function NotificationBadge() {
+  const count = useMercureTopic('/notifications/count', 0);
+
+  if (count === 0) return null;
+  return <span className="badge">{count}</span>;
+}
+
+// Explicit type parameter
+function UserStatus({ userId }: { userId: number }) {
+  const status = useMercureTopic<'online' | 'offline' | 'away'>(
+    `/user/${userId}/status`,
+    'offline'
+  );
+  return <span className={status}>{status}</span>;
+}
+
+// Complex types with interfaces
+interface DashboardStats {
+  visitors: number;
+  sales: number;
+  conversion: number;
+}
+
+function Dashboard() {
+  const stats = useMercureTopic<DashboardStats>('/dashboard/stats', {
+    visitors: 0,
+    sales: 0,
+    conversion: 0,
+  });
+
+  return (
+    <div>
+      <span>Visitors: {stats.visitors}</span>
+      <span>Sales: {stats.sales}</span>
+      <span>Conversion: {stats.conversion}%</span>
+    </div>
+  );
+}
+```
+
+**Backend:**
+```php
+// Push JSON data to topic
+$hub->publish(new Update(
+    '/notifications/count',
+    json_encode(42)
+));
+```
+
+**Note:** Make sure to set `app.mercureConfig` before using `useMercureTopic`:
+```typescript
+const app = new App(component);
+app.mercureConfig = {
+  hubUrl: "/.well-known/mercure",
+  withCredentials: true,
+};
+```
+
+### Custom Live Regions (Partial Updates)
+
+For partial updates (e.g., updating a sidebar across all pages), you can create your own live region component. The `mercureConfig` is accessible via `useApp()`:
+
+**Setup:**
+```typescript
+import { App, Mercure } from "react-htx";
+
+const app = new App(component);
+const mercure = new Mercure(app);
+
+// Store config for components to access
+app.mercureConfig = {
+  hubUrl: "/.well-known/mercure",
+  withCredentials: true,
+};
+
+mercure.subscribe(app.mercureConfig);
+```
+
+**Custom MercureLive Component:**
+```tsx
+import { useState, useEffect, ReactNode } from 'react';
+import { useApp, HtxComponent } from 'react-htx';
+
+interface MercureLiveProps {
+  topic: string;
+  children: ReactNode;
+}
+
+export function MercureLive({ topic, children }: MercureLiveProps) {
+  const app = useApp();
+  const [content, setContent] = useState<ReactNode>(children);
+
+  useEffect(() => {
+    if (!app.mercureConfig) return;
+
+    const url = new URL(app.mercureConfig.hubUrl);
+    url.searchParams.append('topic', topic);
+
+    const eventSource = new EventSource(url.toString(), {
+      withCredentials: app.mercureConfig.withCredentials,
+    });
+
+    eventSource.onmessage = (event) => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(event.data, 'text/html');
+      const element = doc.body.firstElementChild as HTMLElement;
+
+      if (element) {
+        setContent(
+          <HtxComponent element={element} component={app.component} />
+        );
+      }
+    };
+
+    return () => eventSource.close();
+  }, [topic, app]);
+
+  return <>{content}</>;
+}
+```
+
+**Usage in Templates:**
+```html
+<div id="htx-app">
+  <nav-menu key="nav">...</nav-menu>
+
+  <!-- This region updates independently via /sidebar topic -->
+  <mercure-live topic="/sidebar">
+    <sidebar-component>Initial content</sidebar-component>
+  </mercure-live>
+
+  <main-content key="main">...</main-content>
+</div>
+```
+
+**Backend - Push to Topic:**
+```php
+// Push sidebar update to all clients (regardless of current route)
+$update = new Update('/sidebar', $sidebarHtml);
+$hub->publish($update);
+```
+
+---
+
 ## Props
 
 If you pass props to your htx components like this: 
@@ -189,6 +389,376 @@ function MyComponent({ header, footer } : { header : ReactNode, footer : ReactNo
 
 ---
 
+## 🎯 Full Symfony Example
+
+Here's a complete example showing how to use `react-htx` with Symfony, including Mercure for real-time updates.
+
+### Backend (Symfony)
+
+**Install Mercure Bundle:**
+```bash
+composer require symfony/mercure-bundle
+```
+
+**MercurePublisher Service:**
+```php
+// src/Service/MercurePublisher.php
+namespace App\Service;
+
+use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Mercure\HubInterface;
+use Symfony\Component\Mercure\Update;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+
+class MercurePublisher
+{
+    public function __construct(
+        private HttpKernelInterface $kernel,
+        private HubInterface $hub,
+        private UrlGeneratorInterface $urlGenerator,
+    ) {}
+
+    /**
+     * Render a route and push the HTML to all clients viewing that page
+     */
+    public function pushRoute(string $routeName, array $parameters = []): void
+    {
+        // Generate the pathname for this route
+        $pathname = $this->urlGenerator->generate($routeName, $parameters);
+
+        // Create an internal request to render the route
+        $request = Request::create($pathname);
+        $response = $this->kernel->handle($request, HttpKernelInterface::SUB_REQUEST);
+
+        // Publish the rendered HTML to Mercure
+        $update = new Update($pathname, $response->getContent());
+        $this->hub->publish($update);
+    }
+}
+```
+
+**Controller:**
+```php
+// src/Controller/DashboardController.php
+namespace App\Controller;
+
+use App\Service\MercurePublisher;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+
+class DashboardController extends AbstractController
+{
+    #[Route('/dashboard', name: 'dashboard')]
+    public function index(): Response
+    {
+        return $this->render('dashboard/index.html.twig', [
+            'tasks' => $this->getTaskRepository()->findAll(),
+            'stats' => $this->getStats(),
+        ]);
+    }
+
+    #[Route('/task/complete/{id}', name: 'task_complete', methods: ['POST'])]
+    public function completeTask(int $id, MercurePublisher $publisher): Response
+    {
+        $task = $this->getTaskRepository()->find($id);
+        $task->setCompleted(true);
+        $this->entityManager->flush();
+
+        // Push the dashboard to all clients viewing it
+        $publisher->pushRoute('dashboard');
+
+        return new Response('OK');
+    }
+
+    #[Route('/user/{id}', name: 'user_profile')]
+    public function userProfile(int $id): Response
+    {
+        return $this->render('user/profile.html.twig', [
+            'user' => $this->getUserRepository()->find($id),
+        ]);
+    }
+
+    #[Route('/user/{id}/update', name: 'user_update', methods: ['POST'])]
+    public function updateUser(int $id, MercurePublisher $publisher): Response
+    {
+        $user = $this->getUserRepository()->find($id);
+        // ... update user
+        $this->entityManager->flush();
+
+        // Push the user profile to all clients viewing it
+        $publisher->pushRoute('user_profile', ['id' => $id]);
+
+        return new Response('OK');
+    }
+}
+```
+
+**Templates:**
+
+```twig
+{# templates/dashboard/index.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div id="htx-app">
+    <ui-layout>
+        <header slot="header">
+            <ui-navbar>
+                <a href="{{ path('dashboard') }}">Dashboard</a>
+                <a href="{{ path('settings') }}">Settings</a>
+            </ui-navbar>
+        </header>
+
+        <main>
+            <h1>Dashboard</h1>
+
+            <ui-stats-grid json-stats='{{ stats|json_encode }}'>
+            </ui-stats-grid>
+
+            <ui-card>
+                <h2 slot="header">Tasks</h2>
+                <ui-task-list json-tasks='{{ tasks|json_encode }}'>
+                    {% for task in tasks %}
+                    <div slot="task-{{ task.id }}">
+                        <ui-checkbox
+                            {% if task.completed %}checked{% endif %}
+                            data-task-id="{{ task.id }}"
+                        >
+                            {{ task.title }}
+                        </ui-checkbox>
+                    </div>
+                    {% endfor %}
+                </ui-task-list>
+            </ui-card>
+
+            <ui-notification-area>
+            </ui-notification-area>
+        </main>
+    </ui-layout>
+</div>
+{% endblock %}
+```
+
+```twig
+{# templates/dashboard/_task_list.html.twig #}
+{# Partial template for Mercure updates #}
+<div id="htx-app">
+    <ui-task-list json-tasks='{{ tasks|json_encode }}'>
+        {% for task in tasks %}
+        <div slot="task-{{ task.id }}">
+            <ui-checkbox
+                {% if task.completed %}checked{% endif %}
+                data-task-id="{{ task.id }}"
+            >
+                {{ task.title }}
+            </ui-checkbox>
+        </div>
+        {% endfor %}
+    </ui-task-list>
+</div>
+```
+
+```twig
+{# templates/components/_notification.html.twig #}
+<div id="htx-app">
+    <ui-toast type="{{ type }}" json-visible="true">
+        {{ message }}
+    </ui-toast>
+</div>
+```
+
+### Frontend (TypeScript/React)
+
+**Main Entry:**
+```typescript
+// assets/app.ts
+import { App, Mercure } from 'react-htx';
+import loadable from '@loadable/component';
+
+const component = loadable(
+    async ({ is }: { is: string }) => {
+        const name = is.substring(3); // Remove 'ui-' prefix
+        return import(`./components/${name}.tsx`);
+    },
+    {
+        cacheKey: ({ is }) => is,
+        resolveComponent: (mod, { is }) => {
+            const componentName = is
+                .substring(3)
+                .split('-')
+                .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+                .join('');
+            return mod[componentName] || mod.default;
+        },
+    }
+);
+
+// Initialize app
+const app = new App(component);
+
+// Setup Mercure for real-time updates
+const mercure = new Mercure(app);
+
+// Get hub URL from meta tag (set by Symfony)
+const hubUrl = document.querySelector('meta[name="mercure-hub"]')?.getAttribute('content');
+
+if (hubUrl) {
+    // Subscribe using current pathname as topic (auto re-subscribes on route change)
+    mercure.subscribe({
+        hubUrl,
+        withCredentials: true,
+    });
+
+    mercure.on('sse:connected', () => {
+        console.log('Real-time updates connected');
+    });
+
+    mercure.on('render:success', (event) => {
+        console.log('UI updated:', event.lastEventId);
+    });
+
+    mercure.on('sse:error', () => {
+        console.warn('Connection lost, reconnecting...');
+    });
+}
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    mercure.close();
+});
+```
+
+**Components:**
+
+```tsx
+// assets/components/task-list.tsx
+import { ReactNode } from 'react';
+
+interface Task {
+    id: number;
+    title: string;
+    completed: boolean;
+}
+
+interface TaskListProps {
+    tasks: Task[];
+    children?: ReactNode;
+    [key: `task-${number}`]: ReactNode;
+}
+
+export function TaskList({ tasks, ...slots }: TaskListProps) {
+    const handleComplete = async (taskId: number) => {
+        await fetch(`/task/complete/${taskId}`, { method: 'POST' });
+        // UI will update automatically via Mercure
+    };
+
+    return (
+        <ul className="task-list">
+            {tasks.map(task => (
+                <li key={task.id} onClick={() => handleComplete(task.id)}>
+                    {slots[`task-${task.id}`]}
+                </li>
+            ))}
+        </ul>
+    );
+}
+```
+
+```tsx
+// assets/components/toast.tsx
+import { ReactNode, useEffect, useState } from 'react';
+
+interface ToastProps {
+    type: 'info' | 'success' | 'error';
+    visible: boolean;
+    children: ReactNode;
+}
+
+export function Toast({ type, visible, children }: ToastProps) {
+    const [show, setShow] = useState(visible);
+
+    useEffect(() => {
+        if (visible) {
+            setShow(true);
+            const timer = setTimeout(() => setShow(false), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [visible]);
+
+    if (!show) return null;
+
+    return (
+        <div className={`toast toast-${type}`}>
+            {children}
+        </div>
+    );
+}
+```
+
+```tsx
+// assets/components/checkbox.tsx
+import { ReactNode } from 'react';
+
+interface CheckboxProps {
+    checked?: boolean;
+    'data-task-id'?: string;
+    children: ReactNode;
+}
+
+export function Checkbox({ checked, children, ...props }: CheckboxProps) {
+    return (
+        <label className="checkbox">
+            <input
+                type="checkbox"
+                defaultChecked={checked}
+                {...props}
+            />
+            <span>{children}</span>
+        </label>
+    );
+}
+```
+
+### Symfony Configuration
+
+```yaml
+# config/packages/mercure.yaml
+mercure:
+    hubs:
+        default:
+            url: '%env(MERCURE_URL)%'
+            public_url: '%env(MERCURE_PUBLIC_URL)%'
+            jwt:
+                secret: '%env(MERCURE_JWT_SECRET)%'
+                publish: ['*']
+                subscribe: ['*']
+```
+
+```twig
+{# templates/base.html.twig #}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="mercure-hub" content="{{ mercure_public_url }}">
+    {{ encore_entry_link_tags('app') }}
+</head>
+<body>
+    {% block body %}{% endblock %}
+    {{ encore_entry_script_tags('app') }}
+</body>
+</html>
+```
+
+### How It Works
+
+1. **Initial Load**: Symfony renders HTML with Twig, `react-htx` hydrates it into React components
+2. **Navigation**: Clicking links fetches new HTML via AJAX, React reconciles the differences
+3. **Real-time**: Mercure pushes HTML updates from server, UI updates automatically
+4. **State Preserved**: React component state survives both navigation and real-time updates
+
+---
 
 ## 🤝 Contributing
 
