@@ -188,42 +188,13 @@ When the user navigates to a different route, Mercure automatically reconnects w
 | `render:failed` | `event, html` | Render failed (no root element) |
 | `sse:error` | `error` | Connection error |
 
-### Custom Hooks for Live Data
+### Live Data with useMercureTopic
 
-For simple live values (like notification counts), create a custom hook. The `mercureConfig` is accessible via `useApp()`:
+For simple live values (like notification counts, user status), use the `useMercureTopic` hook to subscribe to Mercure topics that send JSON data:
 
-**useMercureTopic Hook:**
 ```tsx
-import { useState, useEffect } from 'react';
-import { useApp } from 'react-htx';
+import { useMercureTopic } from 'react-htx';
 
-export function useMercureTopic<T>(topic: string, initialValue: T): T {
-  const app = useApp();
-  const [value, setValue] = useState<T>(initialValue);
-
-  useEffect(() => {
-    if (!app.mercureConfig) return;
-
-    const url = new URL(app.mercureConfig.hubUrl);
-    url.searchParams.append('topic', topic);
-
-    const eventSource = new EventSource(url.toString(), {
-      withCredentials: app.mercureConfig.withCredentials,
-    });
-
-    eventSource.onmessage = (event) => {
-      setValue(JSON.parse(event.data));
-    };
-
-    return () => eventSource.close();
-  }, [topic, app]);
-
-  return value;
-}
-```
-
-**Usage:**
-```tsx
 // Simple types - inferred from initial value
 function NotificationBadge() {
   const count = useMercureTopic('/notifications/count', 0);
@@ -272,6 +243,15 @@ $hub->publish(new Update(
     '/notifications/count',
     json_encode(42)
 ));
+```
+
+**Note:** Make sure to set `app.mercureConfig` before using `useMercureTopic`:
+```typescript
+const app = new App(component);
+app.mercureConfig = {
+  hubUrl: "/.well-known/mercure",
+  withCredentials: true,
+};
 ```
 
 ### Custom Live Regions (Partial Updates)
