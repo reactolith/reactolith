@@ -403,4 +403,72 @@ describe("MercureLive", () => {
       expect(mockEventSource?.withCredentials).toBe(true);
     });
   });
+
+  it("handles nested MercureLive components", async () => {
+    let eventSources: MockEventSource[] = [];
+
+    // Track all EventSource instances
+    global.EventSource = vi.fn(
+      (url: string, options?: { withCredentials?: boolean }) => {
+        const es = new MockEventSource(url, options);
+        eventSources.push(es);
+        mockEventSource = es; // Keep reference to latest
+        return es;
+      },
+    ) as any;
+
+    document.body.innerHTML = `<div id="htx-app">
+      <mercure-live topic="/outer">
+        <test-component>Outer initial</test-component>
+      </mercure-live>
+    </div>`;
+
+    const app = new App(createTestComponent());
+    app.mercureConfig = {
+      hubUrl: "https://example.com/.well-known/mercure",
+      withCredentials: false,
+    };
+
+    // Wait for initial render
+    let element = await screen.findByTestId("test-component");
+    expect(element.textContent).toBe("Outer initial");
+
+    // Wait for first EventSource to be created (for /outer topic)
+    await waitFor(() => {
+      expect(eventSources.length).toBe(1);
+      expect(eventSources[0].url).toContain("topic=%2Fouter");
+    });
+
+    // Push an update that contains a nested mercure-live component
+    eventSources[0].simulateMessage(
+      `<test-component>
+        Outer updated
+        <mercure-live topic="/inner">
+          <test-component>Inner initial</test-component>
+        </mercure-live>
+      </test-component>`
+    );
+
+    // Wait for the nested EventSource to be created (for /inner topic)
+    await waitFor(() => {
+      expect(eventSources.length).toBe(2);
+      expect(eventSources[1].url).toContain("topic=%2Finner");
+    }, { timeout: 2000 });
+
+    // Verify both components are rendered
+    const components = screen.getAllByTestId("test-component");
+    expect(components.length).toBeGreaterThanOrEqual(2);
+
+    // Now push an update to the inner topic
+    eventSources[1].simulateMessage("<test-component>Inner updated</test-component>");
+
+    // Verify inner content updated
+    await waitFor(() => {
+      const innerComponents = screen.getAllByTestId("test-component");
+      const hasInnerUpdated = innerComponents.some(
+        comp => comp.textContent?.includes("Inner updated")
+      );
+      expect(hasInnerUpdated).toBe(true);
+    });
+  });
 });
