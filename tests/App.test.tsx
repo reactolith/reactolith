@@ -127,4 +127,60 @@ describe("Test mounting an app", () => {
       "FOOTER!",
     );
   });
+
+  it("Auto-configures Mercure from data-mercure-hub-url attribute", async () => {
+    document.body.innerHTML = `
+<div id="htx-app" data-testid="htx-app" data-mercure-hub-url="https://example.com/.well-known/mercure">
+    <ui-button>Test Button</ui-button>
+</div>`;
+
+    const app = new App(testComponent);
+    const root = await screen.findByTestId("htx-app");
+
+    await waitFor(() => {
+      expect(root.querySelector("pre")).not.toBeNull();
+    });
+
+    expect(app.mercureConfig).toBeDefined();
+    expect(app.mercureConfig?.hubUrl).toBe(
+      "https://example.com/.well-known/mercure",
+    );
+    expect(app.mercureConfig?.withCredentials).toBe(false);
+  });
+
+  it("Auto-configures Mercure with credentials from data-mercure-with-credentials attribute", async () => {
+    document.body.innerHTML = `
+<div id="htx-app" data-testid="htx-app" data-mercure-hub-url="https://example.com/.well-known/mercure" data-mercure-with-credentials>
+    <ui-button>Test Button</ui-button>
+</div>`;
+
+    const app = new App(testComponent);
+    const root = await screen.findByTestId("htx-app");
+
+    await waitFor(() => {
+      expect(root.querySelector("pre")).not.toBeNull();
+    });
+
+    expect(app.mercureConfig).toBeDefined();
+    expect(app.mercureConfig?.hubUrl).toBe(
+      "https://example.com/.well-known/mercure",
+    );
+    expect(app.mercureConfig?.withCredentials).toBe(true);
+  });
+
+  it("Does not configure Mercure when data-mercure-hub-url is not present", async () => {
+    document.body.innerHTML = `
+<div id="htx-app" data-testid="htx-app">
+    <ui-button>Test Button</ui-button>
+</div>`;
+
+    const app = new App(testComponent);
+    const root = await screen.findByTestId("htx-app");
+
+    await waitFor(() => {
+      expect(root.querySelector("pre")).not.toBeNull();
+    });
+
+    expect(app.mercureConfig).toBeUndefined();
+  });
 });

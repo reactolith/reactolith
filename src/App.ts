@@ -47,6 +47,18 @@ export class App {
 
     this.element = element;
     this.root = root || createRoot(this.element);
+
+    // Auto-configure Mercure from data-mercure-hub-url attribute
+    const mercureHubUrl = this.element.getAttribute("data-mercure-hub-url");
+    if (mercureHubUrl) {
+      this.mercureConfig = {
+        hubUrl: mercureHubUrl,
+        withCredentials: this.element.hasAttribute(
+          "data-mercure-with-credentials",
+        ),
+      };
+    }
+
     this.renderElement(this.element);
   }
 

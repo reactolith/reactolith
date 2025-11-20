@@ -1,6 +1,6 @@
 {
   "name": "react-htx",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "Use HTML on the server to compose your react application.",
   "license": "MIT",
   "author": "Franz Mayr-Wilding",

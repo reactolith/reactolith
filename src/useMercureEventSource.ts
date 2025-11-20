@@ -26,11 +26,11 @@ export function useMercureEventSource(
       return;
     }
 
-    const url = new URL(app.mercureConfig.hubUrl, window.location.origin);
+    const url = new URL(app.mercureConfig.hubUrl);
     url.searchParams.append("topic", topic);
 
     const eventSource = new EventSource(url.toString(), {
-      withCredentials: app.mercureConfig.withCredentials,
+      withCredentials: app.mercureConfig.withCredentials ?? false,
     });
 
     eventSource.onmessage = (event) => {

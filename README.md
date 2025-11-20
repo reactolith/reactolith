@@ -205,6 +205,42 @@ function MyComponent({ header, footer } : { header : ReactNode, footer : ReactNo
 
 Mercure automatically subscribes to the **current URL pathname** as the topic and re-subscribes when the route changes.
 
+### Auto-Configuration (Recommended)
+
+The easiest way to configure Mercure is to add the `data-mercure-hub-url` attribute to your root element:
+
+```html
+<div id="htx-app" data-mercure-hub-url="https://example.com/.well-known/mercure">
+  <!-- Your content -->
+</div>
+
+<!-- With credentials (cookies): -->
+<div id="htx-app"
+     data-mercure-hub-url="https://example.com/.well-known/mercure"
+     data-mercure-with-credentials>
+  <!-- Your content -->
+</div>
+```
+
+```typescript
+import { App, Mercure } from "react-htx";
+
+const app = new App(component);
+// mercureConfig is automatically set from data-mercure-hub-url attribute
+
+const mercure = new Mercure(app);
+mercure.subscribe(app.mercureConfig!);
+
+// optional listen to events
+mercure.on("sse:connected", (url) => {
+  console.log("Connected to Mercure hub");
+});
+```
+
+### Manual Configuration
+
+Alternatively, you can configure Mercure programmatically:
+
 ```typescript
 import { App, Mercure } from "react-htx";
 
@@ -215,11 +251,6 @@ const mercure = new Mercure(app);
 mercure.subscribe({
   hubUrl: "https://example.com/.well-known/mercure",
   withCredentials: true,  // Include cookies for authentication
-});
-
-// optional listen to events
-mercure.on("sse:connected", (url) => {
-  console.log("Connected to Mercure hub");
 });
 ```
 
@@ -293,7 +324,9 @@ $hub->publish(new Update(
 ));
 ```
 
-**Note:** Make sure to set `app.mercureConfig` before using `useMercureTopic`:
+**Note:** When using `useMercureTopic`, make sure `app.mercureConfig` is set. You can either:
+- Use the auto-configuration by adding `data-mercure-hub-url` to your root element (recommended), or
+- Set it manually:
 ```typescript
 const app = new App(component);
 app.mercureConfig = {
