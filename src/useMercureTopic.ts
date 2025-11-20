@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useApp } from "./provider/AppProvider";
+import { useState, useCallback } from "react";
+import { useMercureEventSource } from "./useMercureEventSource";
 
 /**
  * Subscribe to a Mercure topic and receive live JSON data updates.
@@ -23,34 +23,18 @@ import { useApp } from "./provider/AppProvider";
  * ```
  */
 export function useMercureTopic<T>(topic: string, initialValue: T): T {
-  const app = useApp();
   const [value, setValue] = useState<T>(initialValue);
 
-  useEffect(() => {
-    if (!app.mercureConfig) return;
+  const handleMessage = useCallback((data: string) => {
+    try {
+      const parsed = JSON.parse(data);
+      setValue(parsed);
+    } catch (error) {
+      console.error("Failed to parse Mercure message:", error);
+    }
+  }, []);
 
-    const url = new URL(app.mercureConfig.hubUrl, window.location.origin);
-    url.searchParams.append("topic", topic);
-
-    const eventSource = new EventSource(url.toString(), {
-      withCredentials: app.mercureConfig.withCredentials,
-    });
-
-    eventSource.onmessage = (event) => {
-      try {
-        const parsed = JSON.parse(event.data);
-        setValue(parsed);
-      } catch (error) {
-        console.error("Failed to parse Mercure message:", error);
-      }
-    };
-
-    eventSource.onerror = () => {
-      // EventSource will automatically reconnect
-    };
-
-    return () => eventSource.close();
-  }, [topic, app]);
+  useMercureEventSource(topic, handleMessage);
 
   return value;
 }

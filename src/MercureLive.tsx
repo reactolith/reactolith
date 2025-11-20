@@ -1,6 +1,7 @@
-import { useState, useEffect, ReactNode } from "react";
+import { useState, useCallback, ReactNode } from "react";
 import { useApp } from "./provider/AppProvider";
 import { HtxComponent } from "./HtxComponent";
+import { useMercureEventSource } from "./useMercureEventSource";
 
 /**
  * Component that subscribes to a Mercure topic and renders HTML updates.
@@ -32,25 +33,11 @@ export function MercureLive({ topic, children }: MercureLiveProps) {
   const app = useApp();
   const [content, setContent] = useState<ReactNode>(children);
 
-  useEffect(() => {
-    if (!app.mercureConfig) {
-      console.warn(
-        "MercureLive: app.mercureConfig is not set. Please configure it before using MercureLive.",
-      );
-      return;
-    }
-
-    const url = new URL(app.mercureConfig.hubUrl, window.location.origin);
-    url.searchParams.append("topic", topic);
-
-    const eventSource = new EventSource(url.toString(), {
-      withCredentials: app.mercureConfig.withCredentials,
-    });
-
-    eventSource.onmessage = (event) => {
+  const handleMessage = useCallback(
+    (data: string) => {
       try {
         const parser = new DOMParser();
-        const doc = parser.parseFromString(event.data, "text/html");
+        const doc = parser.parseFromString(data, "text/html");
         const element = doc.body.firstElementChild as HTMLElement;
 
         if (element) {
@@ -63,15 +50,15 @@ export function MercureLive({ topic, children }: MercureLiveProps) {
       } catch (error) {
         console.error("MercureLive: Failed to parse message:", error);
       }
-    };
+    },
+    [app.component],
+  );
 
-    eventSource.onerror = (error) => {
-      console.error("MercureLive: EventSource error:", error);
-      // EventSource will automatically reconnect
-    };
+  const handleError = useCallback((error: Event) => {
+    console.error("MercureLive: EventSource error:", error);
+  }, []);
 
-    return () => eventSource.close();
-  }, [topic, app]);
+  useMercureEventSource(topic, handleMessage, handleError);
 
   return <>{content}</>;
 }
