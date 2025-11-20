@@ -8,6 +8,9 @@ export type MercureEventMap = {
   "sse:message": [event: MessageEvent, html: string];
   "render:success": [event: MessageEvent, html: string];
   "render:failed": [event: MessageEvent, html: string];
+  "refetch:started": [event: MessageEvent];
+  "refetch:success": [event: MessageEvent, html: string];
+  "refetch:failed": [event: MessageEvent, error: Error];
   "sse:error": [error: Event];
 };
 
@@ -136,9 +139,30 @@ export class Mercure {
       this.emit("sse:connected", this.currentUrl!);
     };
 
-    this.eventSource.onmessage = (event: MessageEvent) => {
+    this.eventSource.onmessage = async (event: MessageEvent) => {
       const html = event.data;
       this.emit("sse:message", event, html);
+
+      // If message is empty or only whitespace, refetch the current route
+      if (!html || html.trim() === "") {
+        this.emit("refetch:started", event);
+        try {
+          const response = await this.app.router.visit(
+            window.location.pathname + window.location.search,
+            { method: "GET" },
+            false, // Don't push state, we're already on this page
+          );
+
+          if (response.result) {
+            this.emit("refetch:success", event, response.html);
+          } else {
+            this.emit("refetch:failed", event, new Error("Failed to render refetched content"));
+          }
+        } catch (error) {
+          this.emit("refetch:failed", event, error as Error);
+        }
+        return;
+      }
 
       // Process the HTML through the app's render method
       const result = this.app.render(html);

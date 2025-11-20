@@ -502,4 +502,188 @@ describe("Mercure SSE integration", () => {
     // Should still only have 1 call (the initial one)
     expect(global.EventSource).toHaveBeenCalledTimes(1);
   });
+
+  it("auto-refetches current route when receiving empty message", async () => {
+    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+      <my-component>Initial</my-component>
+    </div>`;
+
+    // Mock fetch to return updated HTML
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      redirected: false,
+      text: async () => `<div id="htx-app">
+        <my-component>Refetched content</my-component>
+      </div>`,
+    });
+
+    const app = new App(testComponent, undefined, undefined, undefined, undefined, mockFetch as any);
+    appInstances.push(app);
+    const mercure = new Mercure(app);
+
+    const refetchStartedHandler = vi.fn();
+    const refetchSuccessHandler = vi.fn();
+
+    mercure.on("refetch:started", refetchStartedHandler);
+    mercure.on("refetch:success", refetchSuccessHandler);
+
+    mercure.subscribe({
+      hubUrl: "https://example.com/.well-known/mercure",
+    });
+
+    mockEventSource!.simulateOpen();
+
+    const root = await screen.findByTestId("htx-app");
+    await waitFor(() => {
+      expect(root.querySelector("pre")).not.toBeNull();
+    });
+
+    expect(root.querySelector("pre")).toHaveTextContent("Initial");
+
+    // Simulate receiving an empty SSE message
+    mockEventSource!.simulateMessage("");
+
+    // Should trigger refetch
+    await waitFor(() => {
+      expect(refetchStartedHandler).toHaveBeenCalledTimes(1);
+    });
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        window.location.pathname + window.location.search,
+        { method: "GET" }
+      );
+    });
+
+    await waitFor(() => {
+      expect(refetchSuccessHandler).toHaveBeenCalledTimes(1);
+    });
+
+    // Content should be updated
+    await waitFor(() => {
+      expect(root.querySelector("pre")).toHaveTextContent("Refetched content");
+    });
+  });
+
+  it("auto-refetches current route when receiving whitespace-only message", async () => {
+    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+      <my-component>Initial</my-component>
+    </div>`;
+
+    // Mock fetch to return updated HTML
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      redirected: false,
+      text: async () => `<div id="htx-app">
+        <my-component>Refetched content</my-component>
+      </div>`,
+    });
+
+    const app = new App(testComponent, undefined, undefined, undefined, undefined, mockFetch as any);
+    appInstances.push(app);
+    const mercure = new Mercure(app);
+
+    const refetchStartedHandler = vi.fn();
+    const refetchSuccessHandler = vi.fn();
+
+    mercure.on("refetch:started", refetchStartedHandler);
+    mercure.on("refetch:success", refetchSuccessHandler);
+
+    mercure.subscribe({
+      hubUrl: "https://example.com/.well-known/mercure",
+    });
+
+    mockEventSource!.simulateOpen();
+
+    const root = await screen.findByTestId("htx-app");
+    await waitFor(() => {
+      expect(root.querySelector("pre")).not.toBeNull();
+    });
+
+    expect(root.querySelector("pre")).toHaveTextContent("Initial");
+
+    // Simulate receiving a whitespace-only SSE message
+    mockEventSource!.simulateMessage("   \n\t  ");
+
+    // Should trigger refetch
+    await waitFor(() => {
+      expect(refetchStartedHandler).toHaveBeenCalledTimes(1);
+      expect(mockFetch).toHaveBeenCalled();
+      expect(refetchSuccessHandler).toHaveBeenCalledTimes(1);
+    });
+
+    // Content should be updated
+    await waitFor(() => {
+      expect(root.querySelector("pre")).toHaveTextContent("Refetched content");
+    });
+  });
+
+  it("emits refetch:failed when refetch fails", async () => {
+    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+      <my-component>Initial</my-component>
+    </div>`;
+
+    // Mock fetch to reject
+    const mockFetch = vi.fn().mockRejectedValue(new Error("Network error"));
+
+    const app = new App(testComponent, undefined, undefined, undefined, undefined, mockFetch as any);
+    appInstances.push(app);
+    const mercure = new Mercure(app);
+
+    const refetchFailedHandler = vi.fn();
+
+    mercure.on("refetch:failed", refetchFailedHandler);
+
+    mercure.subscribe({
+      hubUrl: "https://example.com/.well-known/mercure",
+    });
+
+    mockEventSource!.simulateOpen();
+
+    // Simulate receiving an empty SSE message
+    mockEventSource!.simulateMessage("");
+
+    // Should emit refetch:failed
+    await waitFor(() => {
+      expect(refetchFailedHandler).toHaveBeenCalledTimes(1);
+      expect(refetchFailedHandler.mock.calls[0][1]).toBeInstanceOf(Error);
+      expect(refetchFailedHandler.mock.calls[0][1].message).toBe("Network error");
+    });
+  });
+
+  it("does not refetch when receiving normal HTML content", async () => {
+    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+      <my-component>Initial</my-component>
+    </div>`;
+
+    const mockFetch = vi.fn();
+
+    const app = new App(testComponent, undefined, undefined, undefined, undefined, mockFetch as any);
+    appInstances.push(app);
+    const mercure = new Mercure(app);
+
+    const refetchStartedHandler = vi.fn();
+
+    mercure.on("refetch:started", refetchStartedHandler);
+
+    mercure.subscribe({
+      hubUrl: "https://example.com/.well-known/mercure",
+    });
+
+    mockEventSource!.simulateOpen();
+
+    // Simulate receiving normal HTML content
+    mockEventSource!.simulateMessage(`<div id="htx-app">
+      <my-component>Updated via SSE</my-component>
+    </div>`);
+
+    const root = await screen.findByTestId("htx-app");
+    await waitFor(() => {
+      expect(root.querySelector("pre")).toHaveTextContent("Updated via SSE");
+    });
+
+    // Should NOT trigger refetch
+    expect(refetchStartedHandler).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
 });

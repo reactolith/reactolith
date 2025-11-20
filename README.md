@@ -256,6 +256,25 @@ mercure.subscribe({
 
 When the user navigates to a different route, Mercure automatically reconnects with the new pathname as the topic.
 
+### Auto-Refetch on Empty Messages
+
+When Mercure receives an **empty message** (or whitespace-only), it automatically refetches the current route. This makes it easy to invalidate the current page from the backend without having to render and send the full HTML:
+
+**Backend (simple invalidation):**
+```php
+// Just notify that the page should refresh - no HTML needed
+$hub->publish(new Update('/dashboard', ''));
+```
+
+Instead of:
+```php
+// Old way: render and send full HTML
+$html = $twig->render('dashboard.html.twig', $data);
+$hub->publish(new Update('/dashboard', $html));
+```
+
+This triggers a GET request to the current URL and renders the response.
+
 ### Mercure Events
 
 | Event | Arguments | Description |
@@ -265,6 +284,9 @@ When the user navigates to a different route, Mercure automatically reconnects w
 | `sse:message` | `event, html` | Message received |
 | `render:success` | `event, html` | HTML rendered successfully |
 | `render:failed` | `event, html` | Render failed (no root element) |
+| `refetch:started` | `event` | Auto-refetch triggered (empty message) |
+| `refetch:success` | `event, html` | Auto-refetch completed successfully |
+| `refetch:failed` | `event, error` | Auto-refetch failed |
 | `sse:error` | `error` | Connection error |
 
 ### Live Data with useMercureTopic

@@ -1,4 +1,4 @@
-import { useState, useCallback, ReactNode } from "react";
+import { useState, useCallback, useEffect, ReactNode } from "react";
 import { useApp } from "./provider/AppProvider";
 import { HtxComponent } from "./HtxComponent";
 import { useMercureEventSource } from "./useMercureEventSource";
@@ -32,6 +32,11 @@ export interface MercureLiveProps {
 export function MercureLive({ topic, children }: MercureLiveProps) {
   const app = useApp();
   const [content, setContent] = useState<ReactNode>(children);
+
+  // Update content when children prop changes (e.g., during navigation)
+  useEffect(() => {
+    setContent(children);
+  }, [children]);
 
   const handleMessage = useCallback(
     (data: string) => {

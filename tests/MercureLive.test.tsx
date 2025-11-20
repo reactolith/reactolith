@@ -52,7 +52,7 @@ class MockEventSource {
 
 // Helper component factory
 function createTestComponent() {
-  return ({ is, children, topic }: { is: string; children?: React.ReactNode; topic?: string }) => {
+  return ({ is, children, topic, open }: { is: string; children?: React.ReactNode; topic?: string; open?: boolean }) => {
     if (is === "mercure-live" && topic) {
       return <MercureLive topic={topic}>{children}</MercureLive>;
     }
@@ -61,6 +61,9 @@ function createTestComponent() {
     }
     if (is === "child-component") {
       return <span data-testid="child" data-is={is}>{children}</span>;
+    }
+    if (is === "ui-panel") {
+      return <div data-testid="ui-panel" data-is={is} data-open={open?.toString()}>{children}</div>;
     }
     return <div data-is={is}>{children}</div>;
   };
@@ -470,5 +473,46 @@ describe("MercureLive", () => {
       );
       expect(hasInnerUpdated).toBe(true);
     });
+  });
+
+  it("updates children when navigation changes props (without Mercure messages)", async () => {
+    document.body.innerHTML = `<div id="htx-app">
+      <mercure-live topic="/panel">
+        <ui-panel open="true">Panel content</ui-panel>
+      </mercure-live>
+    </div>`;
+
+    const app = new App(createTestComponent());
+    app.mercureConfig = {
+      hubUrl: "https://example.com/.well-known/mercure",
+      withCredentials: false,
+    };
+
+    // Wait for initial render
+    let panel = await screen.findByTestId("ui-panel");
+    expect(panel.getAttribute("data-open")).toBe("true");
+    expect(panel.textContent).toBe("Panel content");
+
+    // Simulate navigation that changes the open prop (like router navigation)
+    const newDocument = new DOMParser().parseFromString(
+      `<html><body><div id="htx-app">
+        <mercure-live topic="/panel">
+          <ui-panel open="false">Panel content</ui-panel>
+        </mercure-live>
+      </div></body></html>`,
+      "text/html"
+    );
+
+    // Trigger app.render to simulate navigation
+    app.render(newDocument);
+
+    // Wait for the prop to update
+    await waitFor(() => {
+      panel = screen.getByTestId("ui-panel");
+      expect(panel.getAttribute("data-open")).toBe("false");
+    });
+
+    // Content should remain the same
+    expect(panel.textContent).toBe("Panel content");
   });
 });
