@@ -87,4 +87,8 @@ export class App {
       ),
     );
   }
+
+  public unmount(): void {
+    this.root.unmount();
+  }
 }

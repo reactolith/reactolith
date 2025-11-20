@@ -32,7 +32,7 @@ describe("Router form submission", () => {
     document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
       <my-component>Foo</my-component>
       <form action="/search" method="GET">
-        <input type="text" name="query" value="test" />
+        <input type="text" name="query" default-value="test" read-only />
         <button type="submit">Search</button>
       </form>
     </div>`;
@@ -66,7 +66,7 @@ describe("Router form submission", () => {
     document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
       <my-component>Foo</my-component>
       <form action="/submit" method="POST">
-        <input type="text" name="username" value="john" />
+        <input type="text" name="username" default-value="john" read-only />
         <button type="submit">Submit</button>
       </form>
     </div>`;
@@ -102,7 +102,7 @@ describe("Router form submission", () => {
     document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
       <my-component>Foo</my-component>
       <form action="/search?page=1" method="GET">
-        <input type="text" name="query" value="test" />
+        <input type="text" name="query" default-value="test" read-only />
         <button type="submit">Search</button>
       </form>
     </div>`;
@@ -136,7 +136,7 @@ describe("Router form submission", () => {
     document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
       <my-component>Foo</my-component>
       <form action="/action" method="POST">
-        <input type="text" name="data" value="test" />
+        <input type="text" name="data" default-value="test" read-only />
         <button type="submit" name="action" value="save">Save</button>
         <button type="submit" name="action" value="delete">Delete</button>
       </form>
@@ -182,7 +182,7 @@ describe("Router form submission", () => {
     document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
       <my-component>Foo</my-component>
       <form method="GET">
-        <input type="text" name="query" value="test" />
+        <input type="text" name="query" default-value="test" read-only />
         <button type="submit">Search</button>
       </form>
     </div>`;

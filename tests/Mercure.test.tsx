@@ -58,8 +58,11 @@ describe("Mercure SSE integration", () => {
   let mockEventSource: MockEventSource | null = null;
   const originalEventSource = global.EventSource;
   const originalLocation = window.location;
+  let appInstances: App[] = [];
 
   beforeEach(() => {
+    appInstances = [];
+
     // Mock EventSource globally
     global.EventSource = vi.fn((url: string, options?: { withCredentials?: boolean }) => {
       mockEventSource = new MockEventSource(url, options);
@@ -77,6 +80,16 @@ describe("Mercure SSE integration", () => {
   });
 
   afterEach(() => {
+    // Clean up all app instances
+    appInstances.forEach(app => {
+      try {
+        app.unmount();
+      } catch (e) {
+        // Ignore unmount errors in cleanup
+      }
+    });
+    appInstances = [];
+
     global.EventSource = originalEventSource;
     mockEventSource = null;
     Object.defineProperty(window, "location", {
@@ -91,6 +104,8 @@ describe("Mercure SSE integration", () => {
     </div>`;
 
     const app = new App(testComponent);
+    appInstances.push(app);
+    appInstances.push(app);
     const mercure = new Mercure(app);
 
     expect(mercure).toBeInstanceOf(Mercure);
@@ -103,6 +118,7 @@ describe("Mercure SSE integration", () => {
     </div>`;
 
     const app = new App(testComponent);
+    appInstances.push(app);
     const mercure = new Mercure(app);
 
     mercure.subscribe({
@@ -127,6 +143,7 @@ describe("Mercure SSE integration", () => {
     });
 
     const app = new App(testComponent);
+    appInstances.push(app);
     const mercure = new Mercure(app);
 
     mercure.subscribe({
@@ -143,6 +160,7 @@ describe("Mercure SSE integration", () => {
     </div>`;
 
     const app = new App(testComponent);
+    appInstances.push(app);
     const mercure = new Mercure(app);
     const connectedHandler = vi.fn();
 
@@ -164,6 +182,7 @@ describe("Mercure SSE integration", () => {
     </div>`;
 
     const app = new App(testComponent);
+    appInstances.push(app);
     const mercure = new Mercure(app);
 
     mercure.subscribe({
@@ -195,6 +214,7 @@ describe("Mercure SSE integration", () => {
     </div>`;
 
     const app = new App(testComponent);
+    appInstances.push(app);
     const mercure = new Mercure(app);
     const successHandler = vi.fn();
 
@@ -223,6 +243,7 @@ describe("Mercure SSE integration", () => {
     </div>`;
 
     const app = new App(testComponent);
+    appInstances.push(app);
     const mercure = new Mercure(app);
     const failedHandler = vi.fn();
 
@@ -252,6 +273,7 @@ describe("Mercure SSE integration", () => {
     </div>`;
 
     const app = new App(testComponent);
+    appInstances.push(app);
     const mercure = new Mercure(app);
     const messageHandler = vi.fn();
 
@@ -276,6 +298,7 @@ describe("Mercure SSE integration", () => {
     </div>`;
 
     const app = new App(testComponent);
+    appInstances.push(app);
     const mercure = new Mercure(app);
     const errorHandler = vi.fn();
 
@@ -296,6 +319,7 @@ describe("Mercure SSE integration", () => {
     </div>`;
 
     const app = new App(testComponent);
+    appInstances.push(app);
     const mercure = new Mercure(app);
     const disconnectedHandler = vi.fn();
 
@@ -320,6 +344,7 @@ describe("Mercure SSE integration", () => {
     </div>`;
 
     const app = new App(testComponent);
+    appInstances.push(app);
     const mercure = new Mercure(app);
     const handler = vi.fn();
 
@@ -341,6 +366,7 @@ describe("Mercure SSE integration", () => {
     </div>`;
 
     const app = new App(testComponent);
+    appInstances.push(app);
     const mercure = new Mercure(app);
     const handler = vi.fn();
 
@@ -362,6 +388,7 @@ describe("Mercure SSE integration", () => {
     </div>`;
 
     const app = new App(testComponent);
+    appInstances.push(app);
     const mercure = new Mercure(app);
     const disconnectedHandler = vi.fn();
 
@@ -397,6 +424,7 @@ describe("Mercure SSE integration", () => {
     </div>`;
 
     const app = new App(testComponent);
+    appInstances.push(app);
     const mercure = new Mercure(app);
 
     mercure.subscribe({
@@ -416,6 +444,7 @@ describe("Mercure SSE integration", () => {
     </div>`;
 
     const app = new App(testComponent);
+    appInstances.push(app);
     const mercure = new Mercure(app);
 
     mercure.subscribe({
@@ -433,6 +462,7 @@ describe("Mercure SSE integration", () => {
     </div>`;
 
     const app = new App(testComponent);
+    appInstances.push(app);
     const mercure = new Mercure(app);
 
     expect(mercure.url).toBeNull();
@@ -451,6 +481,7 @@ describe("Mercure SSE integration", () => {
     </div>`;
 
     const app = new App(testComponent);
+    appInstances.push(app);
     const mercure = new Mercure(app);
 
     mercure.subscribe({
