@@ -36,12 +36,12 @@ export function generateWebTypes(options: GenerateWebTypesOptions) {
   const componentsDir = path.resolve(options.componentsDir || "components/ui");
   const files = fs
     .readdirSync(componentsDir)
-    .filter((f) => f.endsWith(".tsx") || f.endsWith(".ts"));
+    .filter((f: string) => f.endsWith(".tsx") || f.endsWith(".ts"));
 
   const elements: any[] = [];
   const prefix = options.prefix || "";
 
-  files.forEach((file) => {
+  files.forEach((file: string) => {
     const filePath = path.join(componentsDir, file);
     const sourceFile = project.addSourceFileAtPath(filePath);
     if (!sourceFile) return;
@@ -363,8 +363,15 @@ function extractAttributesAndSlots(
       required,
     };
 
-    // Parse union types for enum-like values
-    if (typeText.includes("|")) {
+    // Check for boolean types first (including optional booleans)
+    if (typeText === "boolean" || typeText === "boolean | undefined") {
+      // Boolean attributes can be used without value
+      attr.value = {
+        kind: "no-value",
+        type: "boolean",
+      };
+    } else if (typeText.includes("|")) {
+      // Parse union types for enum-like values
       const values = typeText
         .split("|")
         .map((v: string) => v.trim())
@@ -416,12 +423,6 @@ function extractAttributesAndSlots(
           type: typeText,
         };
       }
-    } else if (typeText === "boolean") {
-      // Boolean attributes can be used without value
-      attr.value = {
-        kind: "no-value",
-        type: "boolean",
-      };
     } else {
       attr.value = {
         kind: "plain",
