@@ -66,7 +66,7 @@ export function generateWebTypes(options: GenerateWebTypesOptions) {
     componentMap.forEach((info) => {
       if (!info.propsType) return;
 
-      const attributes = extractAttributesFromType(
+      const { attributes, slots } = extractAttributesAndSlots(
         info.propsType,
         info.propsNode || info.sourceFile,
       );
@@ -74,11 +74,18 @@ export function generateWebTypes(options: GenerateWebTypesOptions) {
         prefix +
         info.name.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
 
-      elements.push({
+      const element: any = {
         name: tagName,
         description: `${info.name} component`,
         attributes,
-      });
+      };
+
+      // Only add slots if there are any
+      if (slots.length > 0) {
+        element.slots = slots;
+      }
+
+      elements.push(element);
     });
   });
 
@@ -300,76 +307,116 @@ function isJsxReturnType(type: Type): boolean {
 }
 
 /**
- * Extract attributes from a Type
+ * Check if a type represents a React slot (ReactNode, ReactElement, etc.)
  */
-function extractAttributesFromType(type: Type, contextNode: Node) {
-  const props: any = {};
+function isSlotType(typeText: string): boolean {
+  const slotPatterns = [
+    "ReactNode",
+    "ReactElement",
+    "JSX.Element",
+    "Element",
+  ];
+  // Check if type is a slot type (but not a function returning ReactNode)
+  return slotPatterns.some((pattern) => typeText.includes(pattern)) &&
+    !typeText.includes("=>");
+}
+
+/**
+ * Extract attributes and slots from a Type
+ */
+function extractAttributesAndSlots(
+  type: Type,
+  contextNode: Node,
+): { attributes: any[]; slots: any[] } {
+  const attributes: any[] = [];
+  const slots: any[] = [];
 
   type.getProperties().forEach((prop: TsSymbol) => {
     const propName = prop.getName();
 
     // Skip internal React props
-    if (["children", "key", "ref"].includes(propName)) return;
+    if (["key", "ref"].includes(propName)) return;
 
     const propType = prop.getTypeAtLocation(contextNode);
     const typeText = cleanTypeText(propType.getText());
     const description = getPropertyDescription(prop);
+    const required = !prop.isOptional();
 
-    props[propName] = {
-      required: !prop.isOptional(),
-      type: typeText,
-      description,
-    };
-  });
+    // Check if this prop is a slot (ReactNode type)
+    if (isSlotType(typeText)) {
+      // "children" becomes the "default" slot
+      const slotName = propName === "children" ? "default" : propName;
+      slots.push({
+        name: slotName,
+        description: description || `Content for the ${slotName} slot`,
+      });
+      return;
+    }
 
-  return Object.entries(props).map(([name, info]: any) => {
+    // Skip children if it's not a ReactNode (e.g., string children)
+    if (propName === "children") return;
+
+    // Regular attribute
     const attr: any = {
-      name: toKebabCase(name),
-      description: info.description || undefined,
-      required: info.required,
+      name: toKebabCase(propName),
+      description: description || undefined,
+      required,
     };
 
     // Parse union types for enum-like values
-    if (info.type.includes("|")) {
-      const values = info.type
+    if (typeText.includes("|")) {
+      const values = typeText
         .split("|")
         .map((v: string) => v.trim())
         .filter((v: string) => v !== "undefined" && v !== "null");
 
       // Check if all values are string literals (quoted strings only)
       // Exclude primitive types like boolean, string, number, etc.
-      const primitiveTypes = ["boolean", "string", "number", "object", "any", "unknown", "never"];
-      const stringLiteralValues = values.filter(
-        (v: string) => /^["'].*["']$/.test(v),
+      const primitiveTypes = [
+        "boolean",
+        "string",
+        "number",
+        "object",
+        "any",
+        "unknown",
+        "never",
+      ];
+      const stringLiteralValues = values.filter((v: string) =>
+        /^["'].*["']$/.test(v),
       );
 
       const hasOnlyStringLiterals =
         stringLiteralValues.length === values.length && values.length > 0;
 
-      const hasOnlyPrimitives = values.every((v: string) => primitiveTypes.includes(v));
+      const hasOnlyPrimitives = values.every((v: string) =>
+        primitiveTypes.includes(v),
+      );
 
       if (hasOnlyStringLiterals) {
         attr.value = {
           kind: "plain",
-          type: info.type,
+          type: typeText,
         };
         // Add enum values for better autocomplete
         attr.values = stringLiteralValues
           .map((v: string) => v.replace(/['"]/g, ""))
           .map((v: string) => ({ name: v }));
-      } else if (hasOnlyPrimitives || values.some((v: string) => v.includes("=>"))) {
+      } else if (
+        hasOnlyPrimitives ||
+        values.some((v: string) => v.includes("=>"))
+      ) {
         // Function types or primitive unions
         attr.value = {
           kind: "expression",
-          type: info.type,
+          type: typeText,
         };
       } else {
         attr.value = {
           kind: "plain",
-          type: info.type,
+          type: typeText,
         };
       }
-    } else if (info.type === "boolean") {
+    } else if (typeText === "boolean") {
       // Boolean attributes can be used without value
       attr.value = {
         kind: "no-value",
@@ -378,12 +425,14 @@ function extractAttributesFromType(type: Type, contextNode: Node) {
     } else {
       attr.value = {
         kind: "plain",
-        type: info.type,
+        type: typeText,
       };
     }
 
-    return attr;
+    attributes.push(attr);
   });
+
+  return { attributes, slots };
 }
 
 /**
