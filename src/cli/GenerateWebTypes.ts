@@ -8,6 +8,8 @@ import {
   Type,
   Symbol as TsSymbol,
   SourceFile,
+  Identifier,
+  ImportDeclaration,
 } from "ts-morph";
 import fs from "fs";
 import path from "path";
@@ -64,7 +66,7 @@ export function generateWebTypes(options: GenerateWebTypesOptions) {
     });
 
     componentMap.forEach((info) => {
-      if (!info.propsType) return;
+      if (info.propsType === undefined) return;
 
       const { attributes, slots } = extractAttributesAndSlots(
         info.propsType,
@@ -169,11 +171,24 @@ function extractFromComponentFunctions(sourceFile: SourceFile): ComponentInfo[] 
   if (defaultExport) {
     const decls = defaultExport.getDeclarations();
     for (const decl of decls) {
-      const propsInfo = extractPropsFromDeclaration(decl);
+      let propsInfo = extractPropsFromDeclaration(decl);
+
+      // If no props found directly, check if it's an ExportAssignment with an Identifier
+      if (!propsInfo && Node.isExportAssignment(decl)) {
+        const expr = (decl as any).getExpression?.();
+        if (expr && Node.isIdentifier(expr)) {
+          // Try to resolve the identifier to its declaration
+          propsInfo = resolveIdentifierToProps(expr as Identifier, sourceFile);
+        }
+      }
+
       if (propsInfo) {
-        // Use filename as component name for default exports
+        // Use filename as component name for default exports, converting kebab-case to PascalCase
         const fileName = path.basename(sourceFile.getFilePath(), path.extname(sourceFile.getFilePath()));
-        const componentName = fileName.charAt(0).toUpperCase() + fileName.slice(1);
+        const componentName = fileName
+          .split("-")
+          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+          .join("");
         results.push({
           name: componentName,
           propsType: propsInfo.type,
@@ -188,11 +203,120 @@ function extractFromComponentFunctions(sourceFile: SourceFile): ComponentInfo[] 
 }
 
 /**
+ * Resolve an identifier to its props - handles local variables and imports
+ */
+function resolveIdentifierToProps(
+  identifier: Identifier,
+  sourceFile: SourceFile,
+): { type: Type | null; node: Node } | null {
+  const identifierName = identifier.getText();
+
+  // First, check if it's a local variable declaration
+  const localVar = sourceFile.getVariableDeclaration(identifierName);
+  if (localVar) {
+    return extractPropsFromDeclaration(localVar);
+  }
+
+  // Check if it's a local function declaration
+  const localFunc = sourceFile.getFunction(identifierName);
+  if (localFunc) {
+    return extractPropsFromDeclaration(localFunc);
+  }
+
+  // Check if it's an imported symbol - try to get props directly from the type
+  const identifierType = identifier.getType();
+  const callSignatures = identifierType.getCallSignatures();
+  if (callSignatures.length > 0) {
+    const sig = callSignatures[0];
+    const params = sig.getParameters();
+    if (params.length > 0) {
+      const firstParam = params[0];
+      const paramType = firstParam.getTypeAtLocation(identifier);
+      const returnType = sig.getReturnType();
+      if (isJsxReturnType(returnType)) {
+        return { type: paramType, node: identifier };
+      }
+    } else {
+      // No params but returns JSX - component without props
+      const returnType = sig.getReturnType();
+      if (isJsxReturnType(returnType)) {
+        return { type: null, node: identifier };
+      }
+    }
+  }
+
+  // Fallback: try to resolve from the imported module source file
+  const importDecls = sourceFile.getImportDeclarations();
+  for (const importDecl of importDecls) {
+    // Check named imports
+    const namedImports = importDecl.getNamedImports();
+    for (const namedImport of namedImports) {
+      const importedName = namedImport.getAliasNode()?.getText() || namedImport.getName();
+      if (importedName === identifierName) {
+        // Found the import - resolve from the imported module
+        return resolveImportedComponent(importDecl, namedImport.getName(), sourceFile);
+      }
+    }
+
+    // Check default import
+    const defaultImport = importDecl.getDefaultImport();
+    if (defaultImport && defaultImport.getText() === identifierName) {
+      return resolveImportedComponent(importDecl, "default", sourceFile);
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Resolve props from an imported component
+ */
+function resolveImportedComponent(
+  importDecl: ImportDeclaration,
+  exportName: string,
+  _currentSourceFile: SourceFile,
+): { type: Type | null; node: Node } | null {
+  try {
+    const resolvedModule = importDecl.getModuleSpecifierSourceFile();
+
+    if (!resolvedModule) {
+      return null;
+    }
+
+    // Get the exported declaration from the module
+    const exported = resolvedModule.getExportedDeclarations();
+
+    if (exportName === "default") {
+      const defaultExport = resolvedModule.getDefaultExportSymbol();
+      if (defaultExport) {
+        const decls = defaultExport.getDeclarations();
+        for (const decl of decls) {
+          const propsInfo = extractPropsFromDeclaration(decl);
+          if (propsInfo) return propsInfo;
+        }
+      }
+    } else {
+      const decls = exported.get(exportName);
+      if (decls && decls.length > 0) {
+        for (const decl of decls) {
+          const propsInfo = extractPropsFromDeclaration(decl);
+          if (propsInfo) return propsInfo;
+        }
+      }
+    }
+  } catch {
+    // Module resolution failed - this is okay for external modules
+  }
+
+  return null;
+}
+
+/**
  * Extract props type from a function/variable declaration
  */
 function extractPropsFromDeclaration(
   decl: Node,
-): { type: Type; node: Node } | null {
+): { type: Type | null; node: Node } | null {
   // Handle function declarations: export function Button(props: ButtonProps) {}
   if (Node.isFunctionDeclaration(decl)) {
     return extractPropsFromFunction(decl as FunctionDeclaration);
@@ -225,6 +349,26 @@ function extractPropsFromDeclaration(
         }
       }
     }
+
+    // Handle property access expressions: const Select = SelectPrimitive.Root
+    if (initializer && (Node.isPropertyAccessExpression(initializer) || Node.isIdentifier(initializer))) {
+      // Try to get the type from the variable declaration
+      const varType = varDecl.getType();
+      // Check if this is a React component type (has Props in the call signature)
+      const callSignatures = varType.getCallSignatures();
+      if (callSignatures.length > 0) {
+        const sig = callSignatures[0];
+        const params = sig.getParameters();
+        if (params.length > 0) {
+          const firstParam = params[0];
+          const paramType = firstParam.getTypeAtLocation(varDecl);
+          const returnType = sig.getReturnType();
+          if (isJsxReturnType(returnType)) {
+            return { type: paramType, node: varDecl };
+          }
+        }
+      }
+    }
   }
 
   // Handle export default function() {}
@@ -245,49 +389,55 @@ function extractPropsFromDeclaration(
 
 function extractPropsFromFunction(
   func: FunctionDeclaration,
-): { type: Type; node: Node } | null {
-  const params = func.getParameters();
-  if (params.length === 0) return null;
-
-  const firstParam = params[0];
-  const type = firstParam.getType();
-
+): { type: Type | null; node: Node } | null {
   // Check if this looks like a React component (returns JSX)
   const returnType = func.getReturnType();
   if (!isJsxReturnType(returnType)) return null;
 
+  const params = func.getParameters();
+  if (params.length === 0) {
+    // No params - return empty props type
+    return { type: null, node: func };
+  }
+
+  const firstParam = params[0];
+  const type = firstParam.getType();
   return { type, node: firstParam };
 }
 
 function extractPropsFromArrowFunction(
   func: ArrowFunction,
-): { type: Type; node: Node } | null {
-  const params = func.getParameters();
-  if (params.length === 0) return null;
-
-  const firstParam = params[0];
-  const type = firstParam.getType();
-
+): { type: Type | null; node: Node } | null {
   // Check if this looks like a React component (returns JSX)
   const returnType = func.getReturnType();
   if (!isJsxReturnType(returnType)) return null;
 
+  const params = func.getParameters();
+  if (params.length === 0) {
+    // No params - return empty props type
+    return { type: null, node: func };
+  }
+
+  const firstParam = params[0];
+  const type = firstParam.getType();
   return { type, node: firstParam };
 }
 
 function extractPropsFromFunctionExpression(
   func: FunctionExpression,
-): { type: Type; node: Node } | null {
-  const params = func.getParameters();
-  if (params.length === 0) return null;
-
-  const firstParam = params[0];
-  const type = firstParam.getType();
-
+): { type: Type | null; node: Node } | null {
   // Check if this looks like a React component (returns JSX)
   const returnType = func.getReturnType();
   if (!isJsxReturnType(returnType)) return null;
 
+  const params = func.getParameters();
+  if (params.length === 0) {
+    // No params - return empty props type
+    return { type: null, node: func };
+  }
+
+  const firstParam = params[0];
+  const type = firstParam.getType();
   return { type, node: firstParam };
 }
 
@@ -310,26 +460,38 @@ function isJsxReturnType(type: Type): boolean {
  * Check if a type represents a React slot (ReactNode, ReactElement, etc.)
  */
 function isSlotType(typeText: string): boolean {
+  // Exact patterns that indicate a slot type
   const slotPatterns = [
     "ReactNode",
     "ReactElement",
     "JSX.Element",
-    "Element",
   ];
-  // Check if type is a slot type (but not a function returning ReactNode)
-  return slotPatterns.some((pattern) => typeText.includes(pattern)) &&
-    !typeText.includes("=>");
+
+  // Check if type is a slot type (but not a function returning ReactNode or event handler)
+  const isSlot = slotPatterns.some((pattern) => typeText.includes(pattern));
+
+  // Exclude event handlers and functions
+  const isFunction = typeText.includes("=>") ||
+    typeText.includes("EventHandler") ||
+    typeText.includes("Handler<");
+
+  return isSlot && !isFunction;
 }
 
 /**
  * Extract attributes and slots from a Type
  */
 function extractAttributesAndSlots(
-  type: Type,
+  type: Type | null,
   contextNode: Node,
 ): { attributes: any[]; slots: any[] } {
   const attributes: any[] = [];
   const slots: any[] = [];
+
+  // Handle null type (components with no props)
+  if (!type) {
+    return { attributes, slots };
+  }
 
   type.getProperties().forEach((prop: TsSymbol) => {
     const propName = prop.getName();

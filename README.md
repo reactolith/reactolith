@@ -455,6 +455,58 @@ $hub->publish(new Update('/sidebar', $html));
 
 ---
 
+## 🧩 IDE Autocomplete (Web-Types)
+
+`react-htx` includes a CLI tool to generate [web-types](https://github.com/JetBrains/web-types) for your custom components. This enables **autocomplete and validation** in IDEs like WebStorm, PhpStorm, and VS Code (with appropriate plugins).
+
+### Generate web-types.json
+
+```bash
+npx generate-web-types -c src/components/ui -o web-types.json -n my-app
+```
+
+**Options:**
+| Option | Short | Description | Default |
+|--------|-------|-------------|---------|
+| `--components` | `-c` | Components directory | `components/ui` |
+| `--tsconfig` | `-t` | TypeScript config file | `tsconfig.app.json` (or `tsconfig.json`) |
+| `--out` | `-o` | Output file | `web-types.json` |
+| `--name` | `-n` | Library name | `htx-components` |
+| `--version` | `-v` | Library version | `1.0.0` |
+| `--prefix` | `-p` | Element name prefix | `""` |
+| `--help` | `-h` | Show help | |
+
+### Configure your project
+
+Add the generated file to your `package.json`:
+
+```json
+{
+  "name": "my-app",
+  "web-types": "./web-types.json"
+}
+```
+
+### Result
+
+After restarting your IDE, you'll get:
+- ✅ **Autocomplete** for custom element names (e.g., `<ui-button>`)
+- ✅ **Prop suggestions** with types and descriptions
+- ✅ **Slot hints** for components with children/slots
+- ✅ **Validation** for required props and valid values
+
+**Tip:** Add `npx generate-web-types ...` to your build script to keep web-types in sync:
+
+```json
+{
+  "scripts": {
+    "build": "vite build && npx generate-web-types -c src/components/ui -o web-types.json"
+  }
+}
+```
+
+---
+
 ## 🤝 Contributing
 
 Contributions are welcome!

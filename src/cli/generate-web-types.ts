@@ -1,5 +1,17 @@
 #!/usr/bin/env node
 import { generateWebTypes } from "./GenerateWebTypes";
+import fs from "fs";
+
+/**
+ * Detect the default tsconfig file.
+ * Prefers tsconfig.app.json (common in Vite/modern setups) over tsconfig.json
+ */
+function detectDefaultTsconfig(): string {
+  if (fs.existsSync("./tsconfig.app.json")) {
+    return "./tsconfig.app.json";
+  }
+  return "./tsconfig.json";
+}
 
 function printHelp() {
   console.log(`
@@ -7,7 +19,7 @@ Usage: generate-web-types [options]
 
 Options:
   --components, -c <dir>      Components directory (default: components/ui)
-  --tsconfig, -t <file>       TypeScript config file (default: ./tsconfig.json)
+  --tsconfig, -t <file>       TypeScript config file (default: tsconfig.app.json if exists, else tsconfig.json)
   --out, -o <file>            Output file (default: web-types.json)
   --name, -n <name>           Library name (default: htx-components)
   --version, -v <version>     Library version (default: 1.0.0)
@@ -83,7 +95,7 @@ const options = parseArgs(process.argv.slice(2));
 
 generateWebTypes({
   componentsDir: options.componentsDir || "components/ui",
-  tsconfig: options.tsconfig || "./tsconfig.json",
+  tsconfig: options.tsconfig || detectDefaultTsconfig(),
   outFile: options.outFile || "web-types.json",
   libraryName: options.libraryName || "htx-components",
   libraryVersion: options.libraryVersion || "1.0.0",
