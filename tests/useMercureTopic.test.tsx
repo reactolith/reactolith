@@ -53,20 +53,28 @@ class MockEventSource {
 describe("useMercureTopic", () => {
   let mockEventSource: MockEventSource | null = null;
   const originalEventSource = global.EventSource;
+  let eventSourceCalls: Array<[string, any?]> = [];
 
   beforeEach(() => {
-    // Mock EventSource globally
-    global.EventSource = vi.fn((url: string, options?: { withCredentials?: boolean }) => {
-      mockEventSource = new MockEventSource(url, options);
-      return mockEventSource;
-    }) as any;
-    (global.EventSource as any).CONNECTING = 0;
-    (global.EventSource as any).OPEN = 1;
-    (global.EventSource as any).CLOSED = 2;
+    eventSourceCalls = [];
+
+    // Mock EventSource globally with a proper constructor function
+    const TrackedEventSource: any = class extends MockEventSource {
+      constructor(url: string, options?: { withCredentials?: boolean }) {
+        super(url, options);
+        mockEventSource = this;
+        eventSourceCalls.push([url, options]);
+      }
+    };
+    TrackedEventSource.CONNECTING = 0;
+    TrackedEventSource.OPEN = 1;
+    TrackedEventSource.CLOSED = 2;
+
+    global.EventSource = TrackedEventSource;
   });
 
   afterEach(() => {
-    global.EventSource = originalEventSource;
+    // Don't reset global.EventSource here - let each test's beforeEach handle it
     mockEventSource = null;
   });
 
@@ -121,21 +129,26 @@ describe("useMercureTopic", () => {
       return <div data-is={is}>Test</div>;
     }
 
-    document.body.innerHTML = `<div id="htx-app">
-      <test-component></test-component>
-    </div>`;
+    const div = document.createElement('div');
+    div.id = 'htx-app';
+    div.setAttribute('data-mercure-hub-url', 'https://example.com/.well-known/mercure');
+    div.setAttribute('data-mercure-with-credentials', '');
+    div.innerHTML = '<test-component></test-component>';
+    document.body.innerHTML = '';
+    document.body.appendChild(div);
 
     const app = new App(TestComponent);
-    app.mercureConfig = {
-      hubUrl: "https://example.com/.well-known/mercure",
-      withCredentials: true,
-    };
 
     await waitFor(() => {
-      expect(global.EventSource).toHaveBeenCalledWith(
-        expect.stringContaining("topic=%2Fnotifications%2Fcount"),
-        { withCredentials: true }
+      // Find the call for this specific test with the correct withCredentials value
+      const relevantCall = eventSourceCalls.find(call =>
+        call[0].includes('topic=%2Fnotifications%2Fcount') &&
+        call[1]?.withCredentials === true
       );
+
+      expect(relevantCall).toBeDefined();
+      expect(relevantCall![0]).toContain("topic=%2Fnotifications%2Fcount");
+      expect(relevantCall![1]).toEqual({ withCredentials: true });
     });
   });
 
@@ -235,6 +248,6 @@ describe("useMercureTopic", () => {
     expect(countElement.textContent).toBe("42");
 
     // EventSource should not be created
-    expect(global.EventSource).not.toHaveBeenCalled();
+    expect(eventSourceCalls.length).toBe(0);
   });
 });

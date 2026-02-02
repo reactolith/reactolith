@@ -59,18 +59,25 @@ describe("Mercure SSE integration", () => {
   const originalEventSource = global.EventSource;
   const originalLocation = window.location;
   let appInstances: App[] = [];
+  let eventSourceCalls: Array<[string, any?]> = [];
 
   beforeEach(() => {
     appInstances = [];
+    eventSourceCalls = [];
 
-    // Mock EventSource globally
-    global.EventSource = vi.fn((url: string, options?: { withCredentials?: boolean }) => {
-      mockEventSource = new MockEventSource(url, options);
-      return mockEventSource;
-    }) as any;
-    (global.EventSource as any).CONNECTING = 0;
-    (global.EventSource as any).OPEN = 1;
-    (global.EventSource as any).CLOSED = 2;
+    // Mock EventSource globally with a proper constructor function
+    const TrackedEventSource: any = class extends MockEventSource {
+      constructor(url: string, options?: { withCredentials?: boolean}) {
+        super(url, options);
+        mockEventSource = this;
+        eventSourceCalls.push([url, options]);
+      }
+    };
+    TrackedEventSource.CONNECTING = 0;
+    TrackedEventSource.OPEN = 1;
+    TrackedEventSource.CLOSED = 2;
+
+    global.EventSource = TrackedEventSource;
 
     // Mock window.location
     Object.defineProperty(window, "location", {
@@ -90,7 +97,7 @@ describe("Mercure SSE integration", () => {
     });
     appInstances = [];
 
-    global.EventSource = originalEventSource;
+    // Don't reset global.EventSource here - let each test's beforeEach handle it
     mockEventSource = null;
     Object.defineProperty(window, "location", {
       value: originalLocation,
@@ -125,10 +132,9 @@ describe("Mercure SSE integration", () => {
       hubUrl: "https://example.com/.well-known/mercure",
     });
 
-    expect(global.EventSource).toHaveBeenCalledWith(
-      "https://example.com/.well-known/mercure?topic=%2Fdashboard",
-      { withCredentials: false },
-    );
+    expect(eventSourceCalls.length).toBe(1);
+    expect(eventSourceCalls[0][0]).toBe("https://example.com/.well-known/mercure?topic=%2Fdashboard");
+    expect(eventSourceCalls[0][1]).toEqual({ withCredentials: false });
   });
 
   it("uses different pathnames as topics", async () => {
@@ -150,7 +156,8 @@ describe("Mercure SSE integration", () => {
       hubUrl: "https://example.com/.well-known/mercure",
     });
 
-    const calledUrl = (global.EventSource as any).mock.calls[0][0];
+    expect(eventSourceCalls.length).toBe(1);
+    const calledUrl = eventSourceCalls[0][0];
     expect(calledUrl).toContain("topic=%2Fusers%2F123");
   });
 
@@ -414,7 +421,8 @@ describe("Mercure SSE integration", () => {
     expect(disconnectedHandler).toHaveBeenCalledTimes(1);
 
     // Verify new subscription uses new pathname
-    const calledUrl = (global.EventSource as any).mock.calls[1][0];
+    expect(eventSourceCalls.length).toBe(2);
+    const calledUrl = eventSourceCalls[1][0];
     expect(calledUrl).toContain("topic=%2Fnew-route");
   });
 
@@ -432,10 +440,8 @@ describe("Mercure SSE integration", () => {
       withCredentials: true,
     });
 
-    expect(global.EventSource).toHaveBeenCalledWith(
-      expect.any(String),
-      { withCredentials: true },
-    );
+    expect(eventSourceCalls.length).toBe(1);
+    expect(eventSourceCalls[0][1]).toEqual({ withCredentials: true });
   });
 
   it("includes lastEventId in URL", async () => {
@@ -452,7 +458,8 @@ describe("Mercure SSE integration", () => {
       lastEventId: "abc123",
     });
 
-    const calledUrl = (global.EventSource as any).mock.calls[0][0];
+    expect(eventSourceCalls.length).toBe(1);
+    const calledUrl = eventSourceCalls[0][0];
     expect(calledUrl).toContain("lastEventID=abc123");
   });
 
@@ -500,7 +507,7 @@ describe("Mercure SSE integration", () => {
     (app.router as any).emit("render:success", "/new-route", {}, true, new Response(), "<html></html>", "/new-route");
 
     // Should still only have 1 call (the initial one)
-    expect(global.EventSource).toHaveBeenCalledTimes(1);
+    expect(eventSourceCalls.length).toBe(1);
   });
 
   it("auto-refetches current route when receiving empty message", async () => {

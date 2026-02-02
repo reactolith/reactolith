@@ -72,22 +72,28 @@ function createTestComponent() {
 describe("MercureLive", () => {
   let mockEventSource: MockEventSource | null = null;
   const originalEventSource = global.EventSource;
+  let eventSourceCalls: Array<[string, any?]> = [];
 
   beforeEach(() => {
-    // Mock EventSource globally
-    global.EventSource = vi.fn(
-      (url: string, options?: { withCredentials?: boolean }) => {
-        mockEventSource = new MockEventSource(url, options);
-        return mockEventSource;
-      },
-    ) as any;
-    (global.EventSource as any).CONNECTING = 0;
-    (global.EventSource as any).OPEN = 1;
-    (global.EventSource as any).CLOSED = 2;
+    eventSourceCalls = [];
+
+    // Mock EventSource globally with a proper constructor function
+    const TrackedEventSource: any = class extends MockEventSource {
+      constructor(url: string, options?: { withCredentials?: boolean }) {
+        super(url, options);
+        mockEventSource = this;
+        eventSourceCalls.push([url, options]);
+      }
+    };
+    TrackedEventSource.CONNECTING = 0;
+    TrackedEventSource.OPEN = 1;
+    TrackedEventSource.CLOSED = 2;
+
+    global.EventSource = TrackedEventSource;
   });
 
   afterEach(() => {
-    global.EventSource = originalEventSource;
+    // Don't reset global.EventSource here - let each test's beforeEach handle it
     mockEventSource = null;
   });
 
@@ -109,23 +115,28 @@ describe("MercureLive", () => {
   });
 
   it("subscribes to correct topic with correct URL", async () => {
-    document.body.innerHTML = `<div id="htx-app">
-      <mercure-live topic="/sidebar">
+    const div = document.createElement('div');
+    div.id = 'htx-app';
+    div.setAttribute('data-mercure-hub-url', 'https://example.com/.well-known/mercure');
+    div.setAttribute('data-mercure-with-credentials', '');
+    div.innerHTML = `<mercure-live topic="/sidebar">
         <test-component>Test</test-component>
-      </mercure-live>
-    </div>`;
+      </mercure-live>`;
+    document.body.innerHTML = '';
+    document.body.appendChild(div);
 
     const app = new App(createTestComponent());
-    app.mercureConfig = {
-      hubUrl: "https://example.com/.well-known/mercure",
-      withCredentials: true,
-    };
 
     await waitFor(() => {
-      expect(global.EventSource).toHaveBeenCalledWith(
-        expect.stringContaining("topic=%2Fsidebar"),
-        { withCredentials: true },
+      // Find the call for this specific test with the correct withCredentials value
+      const relevantCall = eventSourceCalls.find(call =>
+        call[0].includes('topic=%2Fsidebar') &&
+        call[1]?.withCredentials === true
       );
+
+      expect(relevantCall).toBeDefined();
+      expect(relevantCall![0]).toContain("topic=%2Fsidebar");
+      expect(relevantCall![1]).toEqual({ withCredentials: true });
     });
   });
 
@@ -281,7 +292,7 @@ describe("MercureLive", () => {
     expect(element.textContent).toBe("Initial");
 
     // EventSource should not be created
-    expect(global.EventSource).not.toHaveBeenCalled();
+    expect(eventSourceCalls.length).toBe(0);
 
     // Should warn about missing config
     await waitFor(() => {
@@ -410,27 +421,27 @@ describe("MercureLive", () => {
   it("handles nested MercureLive components", async () => {
     let eventSources: MockEventSource[] = [];
 
-    // Track all EventSource instances
-    global.EventSource = vi.fn(
-      (url: string, options?: { withCredentials?: boolean }) => {
-        const es = new MockEventSource(url, options);
-        eventSources.push(es);
-        mockEventSource = es; // Keep reference to latest
-        return es;
-      },
-    ) as any;
+    // Track all EventSource instances using a class that extends our base
+    const TrackingEventSource: any = class extends MockEventSource {
+      constructor(url: string, options?: { withCredentials?: boolean }) {
+        super(url, options);
+        eventSources.push(this);
+        mockEventSource = this;
+        eventSourceCalls.push([url, options]);
+      }
+    };
+    TrackingEventSource.CONNECTING = 0;
+    TrackingEventSource.OPEN = 1;
+    TrackingEventSource.CLOSED = 2;
+    global.EventSource = TrackingEventSource;
 
-    document.body.innerHTML = `<div id="htx-app">
+    document.body.innerHTML = `<div id="htx-app" data-mercure-hub-url="https://example.com/.well-known/mercure">
       <mercure-live topic="/outer">
         <test-component>Outer initial</test-component>
       </mercure-live>
     </div>`;
 
     const app = new App(createTestComponent());
-    app.mercureConfig = {
-      hubUrl: "https://example.com/.well-known/mercure",
-      withCredentials: false,
-    };
 
     // Wait for initial render
     let element = await screen.findByTestId("test-component");
