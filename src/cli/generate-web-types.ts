@@ -21,7 +21,7 @@ Options:
   --components, -c <dir>      Components directory (default: components/ui)
   --tsconfig, -t <file>       TypeScript config file (default: tsconfig.app.json if exists, else tsconfig.json)
   --out, -o <file>            Output file (default: web-types.json)
-  --name, -n <name>           Library name (default: htx-components)
+  --name, -n <name>           Library name (default: reactolith-components)
   --version, -v <version>     Library version (default: 1.0.0)
   --prefix, -p <prefix>       Element name prefix (default: "")
   --help, -h                  Show this help message
@@ -97,7 +97,7 @@ generateWebTypes({
   componentsDir: options.componentsDir || "components/ui",
   tsconfig: options.tsconfig || detectDefaultTsconfig(),
   outFile: options.outFile || "web-types.json",
-  libraryName: options.libraryName || "htx-components",
+  libraryName: options.libraryName || "reactolith-components",
   libraryVersion: options.libraryVersion || "1.0.0",
   prefix: options.prefix || "",
 });

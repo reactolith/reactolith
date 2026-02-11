@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, ReactNode } from "react";
 import { useApp } from "./provider/AppProvider";
-import { HtxComponent } from "./HtxComponent";
+import { ReactolithComponent } from "./ReactolithComponent";
 import { useMercureEventSource } from "./useMercureEventSource";
 
 /**
@@ -47,7 +47,7 @@ export function MercureLive({ topic, children }: MercureLiveProps) {
 
         if (element) {
           setContent(
-            <HtxComponent element={element} component={app.component} />,
+            <ReactolithComponent element={element} component={app.component} />,
           );
         } else {
           console.warn("MercureLive: No element found in Mercure message");

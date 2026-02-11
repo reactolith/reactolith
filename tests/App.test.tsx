@@ -46,7 +46,7 @@ function testPropAndSlotComponent({
 describe("Test mounting an app", () => {
   it("Maps every custom html element to a pre-tag", async () => {
     document.body.innerHTML = `
-<div id="htx-app" data-testid="htx-app">
+<div id="reactolith-app" data-testid="reactolith-app">
 
     <h1>My test react app</h1>
     <ui-button>Test Button 1</ui-button>
@@ -54,7 +54,7 @@ describe("Test mounting an app", () => {
 </div>`;
 
     new App(testComponent);
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
 
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
@@ -71,10 +71,10 @@ describe("Test mounting an app", () => {
   });
 
   it("Renders just a custom root element", async () => {
-    document.body.innerHTML = '<div data-testid="htx-app"></div>';
+    document.body.innerHTML = '<div data-testid="reactolith-app"></div>';
 
-    new App(testComponent, testRoot, '[data-testid="htx-app"]');
-    const root = await screen.findByTestId("htx-app");
+    new App(testComponent, testRoot, '[data-testid="reactolith-app"]');
+    const root = await screen.findByTestId("reactolith-app");
 
     await waitFor(() => {
       expect(root).not.toBeEmptyDOMElement();
@@ -85,7 +85,7 @@ describe("Test mounting an app", () => {
 
   it("Maps all props as expected", async () => {
     document.body.innerHTML = `
-<div id="htx-app" data-testid="htx-app" class="hidden">
+<div id="reactolith-app" data-testid="reactolith-app" class="hidden">
     <my-comp key="fo" enabled name="test" data-foo="baa" as="{div}" json-rows='[{ "label": "Foo", "value": "Baa" }, { "label": "Foo1", "value": "Baa1" }]'>
         This text will be discarded.
         <h1 slot="header">HEADER</h1>
@@ -98,7 +98,7 @@ describe("Test mounting an app", () => {
 </div>`;
 
     new App(testPropAndSlotComponent);
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     expect(root).toHaveAttribute("class", "hidden");
 
     await waitFor(() => {
@@ -130,12 +130,12 @@ describe("Test mounting an app", () => {
 
   it("Auto-configures Mercure from data-mercure-hub-url attribute", async () => {
     document.body.innerHTML = `
-<div id="htx-app" data-testid="htx-app" data-mercure-hub-url="https://example.com/.well-known/mercure">
+<div id="reactolith-app" data-testid="reactolith-app" data-mercure-hub-url="https://example.com/.well-known/mercure">
     <ui-button>Test Button</ui-button>
 </div>`;
 
     const app = new App(testComponent);
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
 
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
@@ -150,12 +150,12 @@ describe("Test mounting an app", () => {
 
   it("Auto-configures Mercure with credentials from data-mercure-with-credentials attribute", async () => {
     document.body.innerHTML = `
-<div id="htx-app" data-testid="htx-app" data-mercure-hub-url="https://example.com/.well-known/mercure" data-mercure-with-credentials>
+<div id="reactolith-app" data-testid="reactolith-app" data-mercure-hub-url="https://example.com/.well-known/mercure" data-mercure-with-credentials>
     <ui-button>Test Button</ui-button>
 </div>`;
 
     const app = new App(testComponent);
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
 
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
@@ -170,12 +170,12 @@ describe("Test mounting an app", () => {
 
   it("Does not configure Mercure when data-mercure-hub-url is not present", async () => {
     document.body.innerHTML = `
-<div id="htx-app" data-testid="htx-app">
+<div id="reactolith-app" data-testid="reactolith-app">
     <ui-button>Test Button</ui-button>
 </div>`;
 
     const app = new App(testComponent);
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
 
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();

@@ -29,12 +29,12 @@ describe("Router link handling", () => {
   });
 
   it("ignores links with target=_blank", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
       <a href="/page" target="_blank">Link</a>
     </div>`;
 
-    const fetchMock = createFetchMock(`<div id="htx-app">
+    const fetchMock = createFetchMock(`<div id="reactolith-app">
       <my-component>Bar</my-component>
     </div>`);
     global.fetch = fetchMock as any;
@@ -43,7 +43,7 @@ describe("Router link handling", () => {
 
     await act(async () => {});
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -55,12 +55,12 @@ describe("Router link handling", () => {
   });
 
   it("ignores links with download attribute", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
       <a href="/file.pdf" download>Download</a>
     </div>`;
 
-    const fetchMock = createFetchMock(`<div id="htx-app">
+    const fetchMock = createFetchMock(`<div id="reactolith-app">
       <my-component>Bar</my-component>
     </div>`);
     global.fetch = fetchMock as any;
@@ -69,7 +69,7 @@ describe("Router link handling", () => {
 
     await act(async () => {});
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -81,12 +81,12 @@ describe("Router link handling", () => {
   });
 
   it("ignores links with rel=external", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
       <a href="/page" rel="external">External</a>
     </div>`;
 
-    const fetchMock = createFetchMock(`<div id="htx-app">
+    const fetchMock = createFetchMock(`<div id="reactolith-app">
       <my-component>Bar</my-component>
     </div>`);
     global.fetch = fetchMock as any;
@@ -95,7 +95,7 @@ describe("Router link handling", () => {
 
     await act(async () => {});
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -110,12 +110,12 @@ describe("Router link handling", () => {
   });
 
   it("ignores absolute URLs", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
       <a href="https://example.com">External</a>
     </div>`;
 
-    const fetchMock = createFetchMock(`<div id="htx-app">
+    const fetchMock = createFetchMock(`<div id="reactolith-app">
       <my-component>Bar</my-component>
     </div>`);
     global.fetch = fetchMock as any;
@@ -124,7 +124,7 @@ describe("Router link handling", () => {
 
     await act(async () => {});
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -139,12 +139,12 @@ describe("Router link handling", () => {
   });
 
   it("ignores hash links", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
       <a href="#section">Jump</a>
     </div>`;
 
-    const fetchMock = createFetchMock(`<div id="htx-app">
+    const fetchMock = createFetchMock(`<div id="reactolith-app">
       <my-component>Bar</my-component>
     </div>`);
     global.fetch = fetchMock as any;
@@ -153,7 +153,7 @@ describe("Router link handling", () => {
 
     await act(async () => {});
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -168,12 +168,12 @@ describe("Router link handling", () => {
   });
 
   it("ignores clicks with modifier keys", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
       <a href="/page">Link</a>
     </div>`;
 
-    const fetchMock = createFetchMock(`<div id="htx-app">
+    const fetchMock = createFetchMock(`<div id="reactolith-app">
       <my-component>Bar</my-component>
     </div>`);
     global.fetch = fetchMock as any;
@@ -182,7 +182,7 @@ describe("Router link handling", () => {
 
     await act(async () => {});
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -215,12 +215,12 @@ describe("Router link handling", () => {
   });
 
   it("ignores middle and right clicks", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
       <a href="/page">Link</a>
     </div>`;
 
-    const fetchMock = createFetchMock(`<div id="htx-app">
+    const fetchMock = createFetchMock(`<div id="reactolith-app">
       <my-component>Bar</my-component>
     </div>`);
     global.fetch = fetchMock as any;
@@ -229,7 +229,7 @@ describe("Router link handling", () => {
 
     await act(async () => {});
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -250,12 +250,12 @@ describe("Router link handling", () => {
   });
 
   it("handles nested elements inside links", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
       <a href="/page"><span data-testid="inner">Click me</span></a>
     </div>`;
 
-    const fetchMock = createFetchMock(`<div id="htx-app" data-testid="htx-app">
+    const fetchMock = createFetchMock(`<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Bar</my-component>
     </div>`);
     global.fetch = fetchMock as any;
@@ -264,7 +264,7 @@ describe("Router link handling", () => {
 
     await act(async () => {});
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -281,12 +281,12 @@ describe("Router link handling", () => {
   });
 
   it("handles links with target=_self", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
       <a href="/page" target="_self">Link</a>
     </div>`;
 
-    const fetchMock = createFetchMock(`<div id="htx-app" data-testid="htx-app">
+    const fetchMock = createFetchMock(`<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Bar</my-component>
     </div>`);
     global.fetch = fetchMock as any;
@@ -295,7 +295,7 @@ describe("Router link handling", () => {
 
     await act(async () => {});
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -312,11 +312,11 @@ describe("Router link handling", () => {
   });
 
   it("uses navigate method correctly", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
     </div>`;
 
-    const fetchMock = createFetchMock(`<div id="htx-app" data-testid="htx-app">
+    const fetchMock = createFetchMock(`<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Bar</my-component>
     </div>`);
     global.fetch = fetchMock as any;
@@ -325,7 +325,7 @@ describe("Router link handling", () => {
 
     await act(async () => {});
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });

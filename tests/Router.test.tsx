@@ -15,7 +15,7 @@ function testComponent({ is, children }: { is: string; children: ReactNode }) {
 
 describe("Test app router", () => {
   it("clicking on a link should fetch the content", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
 <my-component>Foo</my-component>
 <a href="/api/data">Link</a>
 </div>`;
@@ -24,7 +24,7 @@ describe("Test app router", () => {
       Promise.resolve({
         ok: true,
         text: () =>
-          Promise.resolve(`<div id="htx-app" data-testid="htx-app">
+          Promise.resolve(`<div id="reactolith-app" data-testid="reactolith-app">
 <my-component>Baa</my-component>
 <a href="/api/data">Link</a>
 </div>`),
@@ -33,7 +33,7 @@ describe("Test app router", () => {
     global.fetch = fetchMock as any;
 
     new App(testComponent);
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
 
     // Give React a tick so the Provider's useEffect subscribes
     await act(async () => {});

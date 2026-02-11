@@ -1,17 +1,17 @@
 {
-  "name": "react-htx",
+  "name": "reactolith",
   "version": "1.0.18",
   "description": "Use HTML on the server to compose your react application.",
   "license": "MIT",
   "author": "Franz Mayr-Wilding",
   "repository": {
     "type": "git",
-    "url": "https://github.com/franzwilding/react-htx"
+    "url": "https://github.com/reactolith/reactolith"
   },
   "bugs": {
-    "url": "https://github.com/franzwilding/react-htx/issues"
+    "url": "https://github.com/reactolith/reactolith/issues"
   },
-  "homepage": "https://github.com/franzwilding/react-htx",
+  "homepage": "https://github.com/reactolith/reactolith",
   "type": "module",
   "keywords": [
     "react",
