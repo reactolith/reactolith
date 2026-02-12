@@ -106,7 +106,7 @@ describe("Mercure SSE integration", () => {
   });
 
   it("creates a Mercure instance", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Initial</my-component>
     </div>`;
 
@@ -120,7 +120,7 @@ describe("Mercure SSE integration", () => {
   });
 
   it("subscribes to Mercure hub using current pathname", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Initial</my-component>
     </div>`;
 
@@ -138,7 +138,7 @@ describe("Mercure SSE integration", () => {
   });
 
   it("uses different pathnames as topics", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Initial</my-component>
     </div>`;
 
@@ -162,7 +162,7 @@ describe("Mercure SSE integration", () => {
   });
 
   it("emits sse:connected when connection opens", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Initial</my-component>
     </div>`;
 
@@ -184,7 +184,7 @@ describe("Mercure SSE integration", () => {
   });
 
   it("processes incoming HTML and renders it", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Initial</my-component>
     </div>`;
 
@@ -198,7 +198,7 @@ describe("Mercure SSE integration", () => {
 
     mockEventSource!.simulateOpen();
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -206,7 +206,7 @@ describe("Mercure SSE integration", () => {
     expect(root.querySelector("pre")).toHaveTextContent("Initial");
 
     // Simulate receiving an SSE message with new HTML
-    mockEventSource!.simulateMessage(`<div id="htx-app">
+    mockEventSource!.simulateMessage(`<div id="reactolith-app">
       <my-component>Updated via SSE</my-component>
     </div>`);
 
@@ -216,7 +216,7 @@ describe("Mercure SSE integration", () => {
   });
 
   it("emits render:success on successful render", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Initial</my-component>
     </div>`;
 
@@ -233,9 +233,9 @@ describe("Mercure SSE integration", () => {
 
     mockEventSource!.simulateOpen();
 
-    await screen.findByTestId("htx-app");
+    await screen.findByTestId("reactolith-app");
 
-    mockEventSource!.simulateMessage(`<div id="htx-app">
+    mockEventSource!.simulateMessage(`<div id="reactolith-app">
       <my-component>Updated</my-component>
     </div>`);
 
@@ -245,7 +245,7 @@ describe("Mercure SSE integration", () => {
   });
 
   it("emits render:failed when root element not found in HTML", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Initial</my-component>
     </div>`;
 
@@ -262,9 +262,9 @@ describe("Mercure SSE integration", () => {
 
     mockEventSource!.simulateOpen();
 
-    await screen.findByTestId("htx-app");
+    await screen.findByTestId("reactolith-app");
 
-    // Send HTML without the htx-app root
+    // Send HTML without the reactolith-app root
     mockEventSource!.simulateMessage(`<div id="other-app">
       <my-component>No root</my-component>
     </div>`);
@@ -275,7 +275,7 @@ describe("Mercure SSE integration", () => {
   });
 
   it("emits sse:message for every message", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Initial</my-component>
     </div>`;
 
@@ -292,7 +292,7 @@ describe("Mercure SSE integration", () => {
 
     mockEventSource!.simulateOpen();
 
-    const html = `<div id="htx-app"><my-component>Updated</my-component></div>`;
+    const html = `<div id="reactolith-app"><my-component>Updated</my-component></div>`;
     mockEventSource!.simulateMessage(html);
 
     expect(messageHandler).toHaveBeenCalledTimes(1);
@@ -300,7 +300,7 @@ describe("Mercure SSE integration", () => {
   });
 
   it("emits sse:error on connection error", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Initial</my-component>
     </div>`;
 
@@ -321,7 +321,7 @@ describe("Mercure SSE integration", () => {
   });
 
   it("closes connection and emits sse:disconnected", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Initial</my-component>
     </div>`;
 
@@ -346,7 +346,7 @@ describe("Mercure SSE integration", () => {
   });
 
   it("can unsubscribe from events using off()", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Initial</my-component>
     </div>`;
 
@@ -368,7 +368,7 @@ describe("Mercure SSE integration", () => {
   });
 
   it("can unsubscribe using returned cleanup function", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Initial</my-component>
     </div>`;
 
@@ -390,7 +390,7 @@ describe("Mercure SSE integration", () => {
   });
 
   it("re-subscribes when router navigates", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Initial</my-component>
     </div>`;
 
@@ -427,7 +427,7 @@ describe("Mercure SSE integration", () => {
   });
 
   it("includes withCredentials option", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Initial</my-component>
     </div>`;
 
@@ -445,7 +445,7 @@ describe("Mercure SSE integration", () => {
   });
 
   it("includes lastEventId in URL", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Initial</my-component>
     </div>`;
 
@@ -464,7 +464,7 @@ describe("Mercure SSE integration", () => {
   });
 
   it("exposes current URL", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Initial</my-component>
     </div>`;
 
@@ -483,7 +483,7 @@ describe("Mercure SSE integration", () => {
   });
 
   it("cleans up router listener on close", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Initial</my-component>
     </div>`;
 
@@ -511,7 +511,7 @@ describe("Mercure SSE integration", () => {
   });
 
   it("auto-refetches current route when receiving empty message", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Initial</my-component>
     </div>`;
 
@@ -519,7 +519,7 @@ describe("Mercure SSE integration", () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
       redirected: false,
-      text: async () => `<div id="htx-app">
+      text: async () => `<div id="reactolith-app">
         <my-component>Refetched content</my-component>
       </div>`,
     });
@@ -540,7 +540,7 @@ describe("Mercure SSE integration", () => {
 
     mockEventSource!.simulateOpen();
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -573,7 +573,7 @@ describe("Mercure SSE integration", () => {
   });
 
   it("auto-refetches current route when receiving whitespace-only message", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Initial</my-component>
     </div>`;
 
@@ -581,7 +581,7 @@ describe("Mercure SSE integration", () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
       redirected: false,
-      text: async () => `<div id="htx-app">
+      text: async () => `<div id="reactolith-app">
         <my-component>Refetched content</my-component>
       </div>`,
     });
@@ -602,7 +602,7 @@ describe("Mercure SSE integration", () => {
 
     mockEventSource!.simulateOpen();
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -626,7 +626,7 @@ describe("Mercure SSE integration", () => {
   });
 
   it("emits refetch:failed when refetch fails", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Initial</my-component>
     </div>`;
 
@@ -659,7 +659,7 @@ describe("Mercure SSE integration", () => {
   });
 
   it("does not refetch when receiving normal HTML content", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Initial</my-component>
     </div>`;
 
@@ -680,11 +680,11 @@ describe("Mercure SSE integration", () => {
     mockEventSource!.simulateOpen();
 
     // Simulate receiving normal HTML content
-    mockEventSource!.simulateMessage(`<div id="htx-app">
+    mockEventSource!.simulateMessage(`<div id="reactolith-app">
       <my-component>Updated via SSE</my-component>
     </div>`);
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).toHaveTextContent("Updated via SSE");
     });

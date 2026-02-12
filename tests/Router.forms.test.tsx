@@ -29,7 +29,7 @@ describe("Router form submission", () => {
   });
 
   it("handles GET form submission with query params", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
       <form action="/search" method="GET">
         <input type="text" name="query" default-value="test" read-only />
@@ -37,7 +37,7 @@ describe("Router form submission", () => {
       </form>
     </div>`;
 
-    const fetchMock = createFetchMock(`<div id="htx-app" data-testid="htx-app">
+    const fetchMock = createFetchMock(`<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Results</my-component>
     </div>`);
     global.fetch = fetchMock as any;
@@ -46,7 +46,7 @@ describe("Router form submission", () => {
 
     await act(async () => {});
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -63,7 +63,7 @@ describe("Router form submission", () => {
   });
 
   it("handles POST form submission with FormData body", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
       <form action="/submit" method="POST">
         <input type="text" name="username" default-value="john" read-only />
@@ -71,7 +71,7 @@ describe("Router form submission", () => {
       </form>
     </div>`;
 
-    const fetchMock = createFetchMock(`<div id="htx-app" data-testid="htx-app">
+    const fetchMock = createFetchMock(`<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Submitted</my-component>
     </div>`);
     global.fetch = fetchMock as any;
@@ -80,7 +80,7 @@ describe("Router form submission", () => {
 
     await act(async () => {});
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -99,7 +99,7 @@ describe("Router form submission", () => {
   });
 
   it("appends form action to existing query params", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
       <form action="/search?page=1" method="GET">
         <input type="text" name="query" default-value="test" read-only />
@@ -107,7 +107,7 @@ describe("Router form submission", () => {
       </form>
     </div>`;
 
-    const fetchMock = createFetchMock(`<div id="htx-app" data-testid="htx-app">
+    const fetchMock = createFetchMock(`<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Results</my-component>
     </div>`);
     global.fetch = fetchMock as any;
@@ -116,7 +116,7 @@ describe("Router form submission", () => {
 
     await act(async () => {});
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -133,7 +133,7 @@ describe("Router form submission", () => {
   });
 
   it("includes submitter button value in form data", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
       <form action="/action" method="POST">
         <input type="text" name="data" default-value="test" read-only />
@@ -142,7 +142,7 @@ describe("Router form submission", () => {
       </form>
     </div>`;
 
-    const fetchMock = createFetchMock(`<div id="htx-app" data-testid="htx-app">
+    const fetchMock = createFetchMock(`<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Done</my-component>
     </div>`);
     global.fetch = fetchMock as any;
@@ -151,7 +151,7 @@ describe("Router form submission", () => {
 
     await act(async () => {});
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -179,7 +179,7 @@ describe("Router form submission", () => {
   });
 
   it("uses current location for forms without action", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
       <form method="GET">
         <input type="text" name="query" default-value="test" read-only />
@@ -187,7 +187,7 @@ describe("Router form submission", () => {
       </form>
     </div>`;
 
-    const fetchMock = createFetchMock(`<div id="htx-app" data-testid="htx-app">
+    const fetchMock = createFetchMock(`<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Results</my-component>
     </div>`);
     global.fetch = fetchMock as any;
@@ -196,7 +196,7 @@ describe("Router form submission", () => {
 
     await act(async () => {});
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -213,14 +213,14 @@ describe("Router form submission", () => {
   });
 
   it("ignores forms with target other than _self", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
       <form action="/external" method="POST" target="_blank">
         <button type="submit">Submit</button>
       </form>
     </div>`;
 
-    const fetchMock = createFetchMock(`<div id="htx-app">
+    const fetchMock = createFetchMock(`<div id="reactolith-app">
       <my-component>Done</my-component>
     </div>`);
     global.fetch = fetchMock as any;
@@ -229,7 +229,7 @@ describe("Router form submission", () => {
 
     await act(async () => {});
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -248,14 +248,14 @@ describe("Router form submission", () => {
   });
 
   it("ignores forms with absolute action URLs", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
       <form action="https://external.com/submit" method="POST">
         <button type="submit">Submit</button>
       </form>
     </div>`;
 
-    const fetchMock = createFetchMock(`<div id="htx-app">
+    const fetchMock = createFetchMock(`<div id="reactolith-app">
       <my-component>Done</my-component>
     </div>`);
     global.fetch = fetchMock as any;
@@ -264,7 +264,7 @@ describe("Router form submission", () => {
 
     await act(async () => {});
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });

@@ -7,10 +7,10 @@ function testComponent({ is, children }: { is: string; children: ReactNode }) {
   return <pre data-is={is}>{children}</pre>;
 }
 
-describe("HtxComponent HTML to React transformation", () => {
+describe("ReactolithComponent HTML to React transformation", () => {
   describe("Native HTML elements", () => {
     it("renders native HTML elements without transformation", async () => {
-      document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+      document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
         <div class="container">
           <h1>Title</h1>
           <p>Paragraph</p>
@@ -19,7 +19,7 @@ describe("HtxComponent HTML to React transformation", () => {
 
       new App(testComponent);
 
-      const root = await screen.findByTestId("htx-app");
+      const root = await screen.findByTestId("reactolith-app");
 
       await waitFor(() => {
         expect(root.querySelector("div.container")).not.toBeNull();
@@ -30,13 +30,13 @@ describe("HtxComponent HTML to React transformation", () => {
     });
 
     it("transforms class to className for native elements", async () => {
-      document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+      document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
         <div class="my-class another-class">Content</div>
       </div>`;
 
       new App(testComponent);
 
-      const root = await screen.findByTestId("htx-app");
+      const root = await screen.findByTestId("reactolith-app");
 
       await waitFor(() => {
         expect(root.querySelector(".my-class")).not.toBeNull();
@@ -46,13 +46,13 @@ describe("HtxComponent HTML to React transformation", () => {
     });
 
     it("passes data-* attributes to native elements", async () => {
-      document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+      document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
         <button data-action="submit" data-id="123">Click</button>
       </div>`;
 
       new App(testComponent);
 
-      const root = await screen.findByTestId("htx-app");
+      const root = await screen.findByTestId("reactolith-app");
 
       await waitFor(() => {
         expect(root.querySelector("button")).not.toBeNull();
@@ -68,13 +68,13 @@ describe("HtxComponent HTML to React transformation", () => {
 
   describe("Custom elements", () => {
     it("detects custom elements by hyphen in tag name", async () => {
-      document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+      document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
         <custom-button>Click</custom-button>
       </div>`;
 
       new App(testComponent);
 
-      const root = await screen.findByTestId("htx-app");
+      const root = await screen.findByTestId("reactolith-app");
 
       await waitFor(() => {
         expect(root.querySelector('pre[data-is="custom-button"]')).not.toBeNull();
@@ -82,7 +82,7 @@ describe("HtxComponent HTML to React transformation", () => {
     });
 
     it("converts empty attributes to boolean true", async () => {
-      document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+      document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
         <my-button disabled>Click</my-button>
       </div>`;
 
@@ -102,7 +102,7 @@ describe("HtxComponent HTML to React transformation", () => {
 
       new App(boolTestComponent);
 
-      const root = await screen.findByTestId("htx-app");
+      const root = await screen.findByTestId("reactolith-app");
 
       await waitFor(() => {
         expect(root.querySelector("button")).not.toBeNull();
@@ -113,7 +113,7 @@ describe("HtxComponent HTML to React transformation", () => {
     });
 
     it("parses json-* attributes as JSON", async () => {
-      document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+      document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
         <my-list json-items='["a", "b", "c"]'>List</my-list>
       </div>`;
 
@@ -135,7 +135,7 @@ describe("HtxComponent HTML to React transformation", () => {
 
       new App(listComponent);
 
-      const root = await screen.findByTestId("htx-app");
+      const root = await screen.findByTestId("reactolith-app");
 
       await waitFor(() => {
         expect(root.querySelector("ul")).not.toBeNull();
@@ -146,7 +146,7 @@ describe("HtxComponent HTML to React transformation", () => {
     });
 
     it("normalizes attribute names to camelCase", async () => {
-      document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+      document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
         <my-input place-holder="Enter text" max-length="100">Input</my-input>
       </div>`;
 
@@ -169,7 +169,7 @@ describe("HtxComponent HTML to React transformation", () => {
 
       new App(inputComponent);
 
-      const root = await screen.findByTestId("htx-app");
+      const root = await screen.findByTestId("reactolith-app");
 
       await waitFor(() => {
         expect(root.querySelector('[data-placeholder="Enter text"]')).not.toBeNull();
@@ -179,7 +179,7 @@ describe("HtxComponent HTML to React transformation", () => {
     });
 
     it("handles component references via as={...} syntax", async () => {
-      document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+      document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
         <my-wrapper as="{custom-component}">Content</my-wrapper>
       </div>`;
 
@@ -202,7 +202,7 @@ describe("HtxComponent HTML to React transformation", () => {
 
       new App(wrapperComponent);
 
-      const root = await screen.findByTestId("htx-app");
+      const root = await screen.findByTestId("reactolith-app");
 
       await waitFor(() => {
         expect(root.querySelector('[data-is="my-wrapper"]')).not.toBeNull();
@@ -215,7 +215,7 @@ describe("HtxComponent HTML to React transformation", () => {
 
   describe("Slots", () => {
     it("handles named slots from regular elements", async () => {
-      document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+      document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
         <my-card>
           <h1 slot="title">Card Title</h1>
           <p>Card content</p>
@@ -241,7 +241,7 @@ describe("HtxComponent HTML to React transformation", () => {
 
       new App(cardComponent);
 
-      const root = await screen.findByTestId("htx-app");
+      const root = await screen.findByTestId("reactolith-app");
 
       await waitFor(() => {
         expect(root.querySelector("article")).not.toBeNull();
@@ -253,7 +253,7 @@ describe("HtxComponent HTML to React transformation", () => {
     });
 
     it("handles template slots with multiple children", async () => {
-      document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+      document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
         <my-modal>
           <template slot="footer">
             <button>Cancel</button>
@@ -282,7 +282,7 @@ describe("HtxComponent HTML to React transformation", () => {
 
       new App(modalComponent);
 
-      const root = await screen.findByTestId("htx-app");
+      const root = await screen.findByTestId("reactolith-app");
 
       await waitFor(() => {
         expect(root.querySelector('[data-is="my-modal"]')).not.toBeNull();
@@ -295,7 +295,7 @@ describe("HtxComponent HTML to React transformation", () => {
 
   describe("Children and text nodes", () => {
     it("handles text nodes correctly", async () => {
-      document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+      document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
         <my-text>
           Some text
           <span>and element</span>
@@ -315,7 +315,7 @@ describe("HtxComponent HTML to React transformation", () => {
 
       new App(textComponent);
 
-      const root = await screen.findByTestId("htx-app");
+      const root = await screen.findByTestId("reactolith-app");
 
       await waitFor(() => {
         expect(root.querySelector('[data-is="my-text"]')).not.toBeNull();
@@ -328,7 +328,7 @@ describe("HtxComponent HTML to React transformation", () => {
     });
 
     it("handles nested custom elements", async () => {
-      document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+      document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
         <my-outer>
           <my-inner>Nested</my-inner>
         </my-outer>
@@ -336,7 +336,7 @@ describe("HtxComponent HTML to React transformation", () => {
 
       new App(testComponent);
 
-      const root = await screen.findByTestId("htx-app");
+      const root = await screen.findByTestId("reactolith-app");
 
       await waitFor(() => {
         expect(root.querySelector('[data-is="my-outer"]')).not.toBeNull();
@@ -349,7 +349,7 @@ describe("HtxComponent HTML to React transformation", () => {
     });
 
     it("uses key attribute when provided", async () => {
-      document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+      document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
         <my-list>
           <my-item key="item-1">First</my-item>
           <my-item key="item-2">Second</my-item>
@@ -358,7 +358,7 @@ describe("HtxComponent HTML to React transformation", () => {
 
       new App(testComponent);
 
-      const root = await screen.findByTestId("htx-app");
+      const root = await screen.findByTestId("reactolith-app");
 
       await waitFor(() => {
         expect(root.querySelectorAll('[data-is="my-item"]').length).toBe(2);
@@ -366,7 +366,7 @@ describe("HtxComponent HTML to React transformation", () => {
     });
 
     it("ignores attributes starting with #", async () => {
-      document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+      document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
         <my-component #internal="value" name="test">Content</my-component>
       </div>`;
 
@@ -388,7 +388,7 @@ describe("HtxComponent HTML to React transformation", () => {
 
       new App(propsComponent);
 
-      const root = await screen.findByTestId("htx-app");
+      const root = await screen.findByTestId("reactolith-app");
 
       await waitFor(() => {
         expect(root.querySelector('[data-is="my-component"]')).not.toBeNull();
@@ -401,13 +401,13 @@ describe("HtxComponent HTML to React transformation", () => {
 
   describe("Edge cases", () => {
     it("handles empty element", async () => {
-      document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+      document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
         <my-empty></my-empty>
       </div>`;
 
       new App(testComponent);
 
-      const root = await screen.findByTestId("htx-app");
+      const root = await screen.findByTestId("reactolith-app");
 
       await waitFor(() => {
         expect(root.querySelector('[data-is="my-empty"]')).not.toBeNull();
@@ -417,7 +417,7 @@ describe("HtxComponent HTML to React transformation", () => {
     });
 
     it("handles self-closing native elements", async () => {
-      document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+      document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
         <div>
           <img src="test.jpg" alt="Test" />
           <br />
@@ -427,7 +427,7 @@ describe("HtxComponent HTML to React transformation", () => {
 
       new App(testComponent);
 
-      const root = await screen.findByTestId("htx-app");
+      const root = await screen.findByTestId("reactolith-app");
 
       await waitFor(() => {
         expect(root.querySelector("img")).not.toBeNull();
@@ -438,13 +438,13 @@ describe("HtxComponent HTML to React transformation", () => {
     });
 
     it("returns null when element is undefined", async () => {
-      document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+      document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
         <my-component>Content</my-component>
       </div>`;
 
       new App(testComponent);
 
-      const root = await screen.findByTestId("htx-app");
+      const root = await screen.findByTestId("reactolith-app");
 
       await waitFor(() => {
         expect(root.querySelector("pre")).not.toBeNull();

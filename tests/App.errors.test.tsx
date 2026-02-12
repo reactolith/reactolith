@@ -25,7 +25,7 @@ describe("App error handling", () => {
   });
 
   it("throws error with custom selector that doesn't match", () => {
-    document.body.innerHTML = `<div id="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app">
       <h1>App</h1>
     </div>`;
 
@@ -55,13 +55,13 @@ describe("App error handling", () => {
   });
 
   it("render() returns false when new document has no root", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Original</my-component>
     </div>`;
 
     const app = new App(testComponent);
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -77,18 +77,18 @@ describe("App error handling", () => {
   });
 
   it("render() returns true when successful", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Original</my-component>
     </div>`;
 
     const app = new App(testComponent);
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
 
-    const result = app.render(`<div id="htx-app">
+    const result = app.render(`<div id="reactolith-app">
       <my-component>Updated</my-component>
     </div>`);
 
@@ -100,13 +100,13 @@ describe("App error handling", () => {
   });
 
   it("render() accepts Document object", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Original</my-component>
     </div>`;
 
     const app = new App(testComponent);
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -114,7 +114,7 @@ describe("App error handling", () => {
     // Create a new document
     const parser = new DOMParser();
     const newDoc = parser.parseFromString(
-      `<html><body><div id="htx-app"><my-component>FromDoc</my-component></div></body></html>`,
+      `<html><body><div id="reactolith-app"><my-component>FromDoc</my-component></div></body></html>`,
       "text/html",
     );
 
@@ -127,7 +127,7 @@ describe("App error handling", () => {
   });
 
   it("filters out non-HTMLElement children", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <!-- This is a comment -->
       <my-component>Content</my-component>
       Text node here
@@ -135,7 +135,7 @@ describe("App error handling", () => {
 
     new App(testComponent);
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
 
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();

@@ -2,7 +2,7 @@ import { createRoot, Root } from "react-dom/client";
 import React, { ElementType, PropsWithChildren } from "react";
 import { AppProvider } from "./provider/AppProvider";
 import { FetchLike, Router } from "./Router";
-import { HtxComponent } from "./HtxComponent";
+import { ReactolithComponent } from "./ReactolithComponent";
 
 export type MercureConfig = {
   hubUrl: string;
@@ -22,7 +22,7 @@ export class App {
   constructor(
     component: ElementType,
     appProvider: ElementType<PropsWithChildren<{ app: App }>> = AppProvider,
-    selector: ((doc: Document) => HTMLElement | null) | string = "#htx-app",
+    selector: ((doc: Document) => HTMLElement | null) | string = "#reactolith-app",
     root?: Root,
     doc: Document = document,
     fetchImp: FetchLike = fetch,
@@ -90,7 +90,7 @@ export class App {
         Array.from(element.children)
           .filter((child) => child instanceof HTMLElement)
           .map((element, key) =>
-            React.createElement(HtxComponent, {
+            React.createElement(ReactolithComponent, {
               key,
               element,
               component: this.component,

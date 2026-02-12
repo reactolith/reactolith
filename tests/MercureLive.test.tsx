@@ -98,7 +98,7 @@ describe("MercureLive", () => {
   });
 
   it("renders initial children before receiving updates", async () => {
-    document.body.innerHTML = `<div id="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app">
       <mercure-live topic="/sidebar">
         <test-component>Initial content</test-component>
       </mercure-live>
@@ -116,7 +116,7 @@ describe("MercureLive", () => {
 
   it("subscribes to correct topic with correct URL", async () => {
     const div = document.createElement('div');
-    div.id = 'htx-app';
+    div.id = 'reactolith-app';
     div.setAttribute('data-mercure-hub-url', 'https://example.com/.well-known/mercure');
     div.setAttribute('data-mercure-with-credentials', '');
     div.innerHTML = `<mercure-live topic="/sidebar">
@@ -141,7 +141,7 @@ describe("MercureLive", () => {
   });
 
   it("sets up onmessage handler", async () => {
-    document.body.innerHTML = `<div id="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app">
       <mercure-live topic="/test">
         <test-component>Test</test-component>
       </mercure-live>
@@ -161,7 +161,7 @@ describe("MercureLive", () => {
   });
 
   it("sets up onerror handler", async () => {
-    document.body.innerHTML = `<div id="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app">
       <mercure-live topic="/test">
         <test-component>Test</test-component>
       </mercure-live>
@@ -181,7 +181,7 @@ describe("MercureLive", () => {
   });
 
   it("updates content when receiving HTML message", async () => {
-    document.body.innerHTML = `<div id="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app">
       <mercure-live topic="/test">
         <test-component>Initial</test-component>
       </mercure-live>
@@ -214,7 +214,7 @@ describe("MercureLive", () => {
   });
 
   it("handles messages with multiple children", async () => {
-    document.body.innerHTML = `<div id="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app">
       <mercure-live topic="/test">
         <test-component></test-component>
       </mercure-live>
@@ -247,7 +247,7 @@ describe("MercureLive", () => {
   });
 
   it("closes EventSource on unmount", async () => {
-    document.body.innerHTML = `<div id="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app">
       <mercure-live topic="/test">
         <test-component>Test</test-component>
       </mercure-live>
@@ -267,7 +267,7 @@ describe("MercureLive", () => {
     const closeSpy = vi.spyOn(mockEventSource!, "close");
 
     // Unmount by clearing the DOM
-    document.body.innerHTML = `<div id="htx-app"></div>`;
+    document.body.innerHTML = `<div id="reactolith-app"></div>`;
     app.render(document);
 
     // EventSource should be closed
@@ -279,7 +279,7 @@ describe("MercureLive", () => {
   it("does nothing when mercureConfig is not set", async () => {
     const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
-    document.body.innerHTML = `<div id="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app">
       <mercure-live topic="/test">
         <test-component>Initial</test-component>
       </mercure-live>
@@ -307,7 +307,7 @@ describe("MercureLive", () => {
   it("handles invalid HTML gracefully", async () => {
     const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
-    document.body.innerHTML = `<div id="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app">
       <mercure-live topic="/test">
         <test-component>Initial</test-component>
       </mercure-live>
@@ -349,7 +349,7 @@ describe("MercureLive", () => {
   it("handles parse errors gracefully", async () => {
     const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    document.body.innerHTML = `<div id="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app">
       <mercure-live topic="/test">
         <test-component>Initial</test-component>
       </mercure-live>
@@ -400,7 +400,7 @@ describe("MercureLive", () => {
   });
 
   it("creates EventSource with correct config", async () => {
-    document.body.innerHTML = `<div id="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app">
       <mercure-live topic="/test">
         <test-component>Test</test-component>
       </mercure-live>
@@ -435,7 +435,7 @@ describe("MercureLive", () => {
     TrackingEventSource.CLOSED = 2;
     global.EventSource = TrackingEventSource;
 
-    document.body.innerHTML = `<div id="htx-app" data-mercure-hub-url="https://example.com/.well-known/mercure">
+    document.body.innerHTML = `<div id="reactolith-app" data-mercure-hub-url="https://example.com/.well-known/mercure">
       <mercure-live topic="/outer">
         <test-component>Outer initial</test-component>
       </mercure-live>
@@ -487,7 +487,7 @@ describe("MercureLive", () => {
   });
 
   it("updates children when navigation changes props (without Mercure messages)", async () => {
-    document.body.innerHTML = `<div id="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app">
       <mercure-live topic="/panel">
         <ui-panel open="true">Panel content</ui-panel>
       </mercure-live>
@@ -506,7 +506,7 @@ describe("MercureLive", () => {
 
     // Simulate navigation that changes the open prop (like router navigation)
     const newDocument = new DOMParser().parseFromString(
-      `<html><body><div id="htx-app">
+      `<html><body><div id="reactolith-app">
         <mercure-live topic="/panel">
           <ui-panel open="false">Panel content</ui-panel>
         </mercure-live>

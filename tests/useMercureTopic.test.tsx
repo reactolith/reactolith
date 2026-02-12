@@ -84,7 +84,7 @@ describe("useMercureTopic", () => {
       return <div data-testid="count" data-is={is}>{count}</div>;
     }
 
-    document.body.innerHTML = `<div id="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app">
       <test-component></test-component>
     </div>`;
 
@@ -104,7 +104,7 @@ describe("useMercureTopic", () => {
       return <div data-testid="count" data-is={is}>{count}</div>;
     }
 
-    document.body.innerHTML = `<div id="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app">
       <test-component></test-component>
     </div>`;
 
@@ -130,7 +130,7 @@ describe("useMercureTopic", () => {
     }
 
     const div = document.createElement('div');
-    div.id = 'htx-app';
+    div.id = 'reactolith-app';
     div.setAttribute('data-mercure-hub-url', 'https://example.com/.well-known/mercure');
     div.setAttribute('data-mercure-with-credentials', '');
     div.innerHTML = '<test-component></test-component>';
@@ -168,7 +168,7 @@ describe("useMercureTopic", () => {
       );
     }
 
-    document.body.innerHTML = `<div id="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app">
       <test-component></test-component>
     </div>`;
 
@@ -191,7 +191,7 @@ describe("useMercureTopic", () => {
       return <div data-testid="count" data-is={is}>{count}</div>;
     }
 
-    document.body.innerHTML = `<div id="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app">
       <test-component></test-component>
     </div>`;
 
@@ -215,7 +215,7 @@ describe("useMercureTopic", () => {
       return <div data-testid="count" data-is={is}>{count}</div>;
     }
 
-    document.body.innerHTML = `<div id="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app">
       <test-component></test-component>
     </div>`;
 
@@ -237,7 +237,7 @@ describe("useMercureTopic", () => {
       return <div data-testid="count" data-is={is}>{count}</div>;
     }
 
-    document.body.innerHTML = `<div id="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app">
       <test-component></test-component>
     </div>`;
 

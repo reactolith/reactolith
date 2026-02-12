@@ -7,7 +7,7 @@ import { useApp } from "../src/provider/AppProvider";
 
 describe("AppProvider", () => {
   it("removes hidden class on mount", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app" class="hidden other-class">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app" class="hidden other-class">
       <my-component>Content</my-component>
     </div>`;
 
@@ -17,7 +17,7 @@ describe("AppProvider", () => {
 
     new App(testComponent);
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
 
     await waitFor(() => {
       expect(root).not.toHaveClass("hidden");
@@ -28,7 +28,7 @@ describe("AppProvider", () => {
   });
 
   it("provides app instance via useApp hook", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Content</my-component>
     </div>`;
 
@@ -42,7 +42,7 @@ describe("AppProvider", () => {
 
     const app = new App(testComponent);
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
 
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
@@ -60,7 +60,7 @@ describe("RouterProvider", () => {
   });
 
   it("provides loading state initially false", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
     </div>`;
 
@@ -71,7 +71,7 @@ describe("RouterProvider", () => {
 
     new App(testComponent);
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
 
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
@@ -81,7 +81,7 @@ describe("RouterProvider", () => {
   });
 
   it("provides lastError initially null", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
     </div>`;
 
@@ -94,7 +94,7 @@ describe("RouterProvider", () => {
 
     new App(testComponent);
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
 
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
@@ -104,7 +104,7 @@ describe("RouterProvider", () => {
   });
 
   it("provides clearError function", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
     </div>`;
 
@@ -118,7 +118,7 @@ describe("RouterProvider", () => {
 
     new App(testComponent);
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
 
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
@@ -128,7 +128,7 @@ describe("RouterProvider", () => {
   });
 
   it("provides router instance via useRouter hook", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Content</my-component>
     </div>`;
 
@@ -142,7 +142,7 @@ describe("RouterProvider", () => {
 
     const app = new App(testComponent);
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
 
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
@@ -152,7 +152,7 @@ describe("RouterProvider", () => {
   });
 
   it("cleans up event listeners on unmount", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Content</my-component>
     </div>`;
 
@@ -163,7 +163,7 @@ describe("RouterProvider", () => {
 
     const app = new App(testComponent);
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
 
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();

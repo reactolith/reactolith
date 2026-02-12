@@ -93,7 +93,7 @@ function getChildren(
           ? child.getAttribute("key")
           : index;
         return (
-          <HtxComponent
+          <ReactolithComponent
             key={key}
             element={child as HTMLElement}
             component={component}
@@ -105,12 +105,12 @@ function getChildren(
     .filter(Boolean);
 }
 
-type HtxProps<T extends HTMLElement = HTMLElement> = React.HTMLAttributes<T> & {
+type ReactolithProps<T extends HTMLElement = HTMLElement> = React.HTMLAttributes<T> & {
   element?: HTMLElement;
   component: React.ElementType;
 };
 
-export const HtxComponent = React.forwardRef<HTMLElement, HtxProps>(
+export const ReactolithComponent = React.forwardRef<HTMLElement, ReactolithProps>(
   ({ element, component: Component, ...props }, forwardedRef) => {
     if (!element) return null;
 
@@ -138,4 +138,4 @@ export const HtxComponent = React.forwardRef<HTMLElement, HtxProps>(
   },
 );
 
-HtxComponent.displayName = "HtxComponent";
+ReactolithComponent.displayName = "ReactolithComponent";

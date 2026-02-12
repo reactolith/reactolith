@@ -96,7 +96,7 @@ export function generateWebTypes(options: GenerateWebTypesOptions) {
   const webTypes = {
     $schema:
       "https://raw.githubusercontent.com/JetBrains/web-types/master/schema/web-types.json",
-    name: options.libraryName || "htx-components",
+    name: options.libraryName || "reactolith-components",
     version: options.libraryVersion || "1.0.0",
     "js-types-syntax": "typescript",
     "description-markup": "markdown",

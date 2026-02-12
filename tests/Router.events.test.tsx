@@ -33,12 +33,12 @@ describe("Router event system", () => {
   });
 
   it("emits nav:started and nav:ended events", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
       <a href="/api/data">Link</a>
     </div>`;
 
-    const fetchMock = createFetchMock(`<div id="htx-app" data-testid="htx-app">
+    const fetchMock = createFetchMock(`<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Bar</my-component>
     </div>`);
     global.fetch = fetchMock as any;
@@ -52,7 +52,7 @@ describe("Router event system", () => {
 
     await act(async () => {});
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -72,11 +72,11 @@ describe("Router event system", () => {
   });
 
   it("emits render:success on successful render", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
     </div>`;
 
-    const fetchMock = createFetchMock(`<div id="htx-app" data-testid="htx-app">
+    const fetchMock = createFetchMock(`<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Bar</my-component>
     </div>`);
     global.fetch = fetchMock as any;
@@ -88,7 +88,7 @@ describe("Router event system", () => {
 
     await act(async () => {});
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -102,11 +102,11 @@ describe("Router event system", () => {
   });
 
   it("emits render:failed when root element is not found", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
     </div>`;
 
-    // Return HTML without the htx-app element
+    // Return HTML without the reactolith-app element
     const fetchMock = createFetchMock(`<div id="other-app">
       <my-component>Bar</my-component>
     </div>`);
@@ -119,7 +119,7 @@ describe("Router event system", () => {
 
     await act(async () => {});
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -133,11 +133,11 @@ describe("Router event system", () => {
   });
 
   it("can unsubscribe from events using off()", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
     </div>`;
 
-    const fetchMock = createFetchMock(`<div id="htx-app" data-testid="htx-app">
+    const fetchMock = createFetchMock(`<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Bar</my-component>
     </div>`);
     global.fetch = fetchMock as any;
@@ -150,7 +150,7 @@ describe("Router event system", () => {
 
     await act(async () => {});
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -166,11 +166,11 @@ describe("Router event system", () => {
   });
 
   it("can unsubscribe using returned cleanup function", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
     </div>`;
 
-    const fetchMock = createFetchMock(`<div id="htx-app" data-testid="htx-app">
+    const fetchMock = createFetchMock(`<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Bar</my-component>
     </div>`);
     global.fetch = fetchMock as any;
@@ -183,7 +183,7 @@ describe("Router event system", () => {
 
     await act(async () => {});
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });
@@ -199,7 +199,7 @@ describe("Router event system", () => {
   });
 
   it("handles redirects correctly", async () => {
-    document.body.innerHTML = `<div id="htx-app" data-testid="htx-app">
+    document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
       <my-component>Foo</my-component>
     </div>`;
 
@@ -209,7 +209,7 @@ describe("Router event system", () => {
         redirected: true,
         url: "/redirected/path",
         text: () =>
-          Promise.resolve(`<div id="htx-app" data-testid="htx-app">
+          Promise.resolve(`<div id="reactolith-app" data-testid="reactolith-app">
           <my-component>Redirected</my-component>
         </div>`),
       }),
@@ -223,7 +223,7 @@ describe("Router event system", () => {
 
     await act(async () => {});
 
-    const root = await screen.findByTestId("htx-app");
+    const root = await screen.findByTestId("reactolith-app");
     await waitFor(() => {
       expect(root.querySelector("pre")).not.toBeNull();
     });

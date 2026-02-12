@@ -1,10 +1,10 @@
-# ⚡️ react-htx
+# ⚡️ reactolith
 
 > **Proof of Concept** – This project is still experimental and **not ready for production**.
 
-`react-htx` lets you **write React components directly in HTML** — making it possible to render and hydrate a React app using server-generated HTML from any backend (e.g. Symfony/Twig, Rails, Laravel, Django, etc.).
+`reactolith` lets you **write React components directly in HTML** — making it possible to render and hydrate a React app using server-generated HTML from any backend (e.g. Symfony/Twig, Rails, Laravel, Django, etc.).
 
-✨ Instead of manually wiring React components everywhere, just return HTML from your backend and `react-htx` will transform it into a live, interactive React application.
+✨ Instead of manually wiring React components everywhere, just return HTML from your backend and `reactolith` will transform it into a live, interactive React application.
 
 It even includes a **built-in router** that intercepts link clicks and form submissions, fetches the next page via AJAX, and updates only what changed — **keeping React state intact between navigations**.
 
@@ -23,7 +23,7 @@ It even includes a **built-in router** that intercepts link clicks and form subm
 ## 📦 Installation
 
 ```bash
-npm install react-htx
+npm install reactolith
 ```
 
 Since react and react-dom are peer dependencies, make sure to also install them:
@@ -35,7 +35,7 @@ npm install react react-dom
 
 ### How It Works
 
-1. **Initial Load**: Symfony renders HTML with Twig, `react-htx` hydrates it into React components
+1. **Initial Load**: Symfony renders HTML with Twig, `reactolith` hydrates it into React components
 2. **Navigation**: Clicking links fetches new HTML via AJAX, React reconciles the differences
 3. **Real-time**: Mercure pushes HTML updates from server, UI updates automatically
 4. **State Preserved**: React component state survives both navigation and real-time updates
@@ -49,7 +49,7 @@ Your backend returns simple HTML:
 ```html
 <html lang="en">
   <body>
-    <div id="htx-app">
+    <div id="reactolith-app">
       <h1>Hello world</h1>
       <ui-button type="primary">This will be a shadcn button</ui-button>
     </div>
@@ -57,11 +57,11 @@ Your backend returns simple HTML:
 </html>
 ```
 
-Your frontend mounts the react-htx app: 
+Your frontend mounts the reactolith app: 
 ```ts
 // app.ts
 import loadable from '@loadable/component'
-import { App } from 'react-htx'
+import { App } from 'reactolith'
 
 const component = loadable(
   async ({ is }: { is: string }) => {
@@ -80,7 +80,7 @@ const component = loadable(
   }
 )
 
-// Uses the HTML element with id="htx-app" as root
+// Uses the HTML element with id="reactolith-app" as root
 new App(component)
 ```
 
@@ -88,7 +88,7 @@ new App(component)
 ```ts
 // app.ts
 import loadable from '@loadable/component'
-import { App } from 'react-htx'
+import { App } from 'reactolith'
 import { AppProvider } from './providers/app-provider.tsx'
 
 const component = loadable(
@@ -102,7 +102,7 @@ new App(component, AppProvider, '#app')
 ```tsx
 // providers/app-provider.tsx
 import React, { ElementType } from "react"
-import { App, RootComponent } from "react-htx"
+import { App, RootComponent } from "reactolith"
 import { RouterProvider } from "react-aria-components"
 import { ThemeProvider } from "./theme-provider"
 
@@ -125,12 +125,12 @@ export const AppProvider: React.FC<{
 
 ## 🔄 Navigation Without Losing State
 
-When navigating, `react-htx` fetches the **next HTML page** and applies **only the differences** using React’s reconciliation algorithm.
+When navigating, `reactolith` fetches the **next HTML page** and applies **only the differences** using React’s reconciliation algorithm.
 👉 This means component state is preserved (e.g., toggles, inputs, focus).
 
 ```html
 <!-- page1.html -->
-<div id="htx-app">
+<div id="reactolith-app">
   <h1>Page 1</h1>
   <ui-toggle json-pressed="false">Toggle</ui-toggle>
   <a href="page2.html">Go to page 2</a>
@@ -139,7 +139,7 @@ When navigating, `react-htx` fetches the **next HTML page** and applies **only t
 
 ```html
 <!-- page2.html -->
-<div id="htx-app">
+<div id="reactolith-app">
   <h1>Page 2</h1>
   <ui-toggle json-pressed="true">Toggle</ui-toggle>
   <a href="page1.html">Go to page 1</a>
@@ -152,7 +152,7 @@ Only the `<h1>` text and the `pressed` prop are updated — everything else rema
 
 ## Props
 
-If you pass props to your htx components like this: 
+If you pass props to your reactolith components like this: 
 ```html
 <my-component enabled name="test" data-foo="baa" as="{my-other-component}" json-config='{ "foo": "baa" }'
 ```
@@ -172,7 +172,7 @@ const props = {
 
 ## Slots
 
-react-htx also provides a simple slot mechanism: Every child if a htx-component with a slot attribute will be 
+reactolith also provides a simple slot mechanism: Every child if a reactolith-component with a slot attribute will be 
 transformed to a slot property, holding the children of the element:
 
 ```html
@@ -201,7 +201,7 @@ function MyComponent({ header, footer } : { header : ReactNode, footer : ReactNo
 
 ## 📡 Real-time Updates with Mercure
 
-`react-htx` supports **Server-Sent Events (SSE)** via [Mercure](https://mercure.rocks/) for real-time updates from your backend. When the server publishes an update, the HTML is automatically rendered — just like with router navigation.
+`reactolith` supports **Server-Sent Events (SSE)** via [Mercure](https://mercure.rocks/) for real-time updates from your backend. When the server publishes an update, the HTML is automatically rendered — just like with router navigation.
 
 Mercure automatically subscribes to the **current URL pathname** as the topic and re-subscribes when the route changes.
 
@@ -210,12 +210,12 @@ Mercure automatically subscribes to the **current URL pathname** as the topic an
 The easiest way to configure Mercure is to add the `data-mercure-hub-url` attribute to your root element:
 
 ```html
-<div id="htx-app" data-mercure-hub-url="https://example.com/.well-known/mercure">
+<div id="reactolith-app" data-mercure-hub-url="https://example.com/.well-known/mercure">
   <!-- Your content -->
 </div>
 
 <!-- With credentials (cookies): -->
-<div id="htx-app"
+<div id="reactolith-app"
      data-mercure-hub-url="https://example.com/.well-known/mercure"
      data-mercure-with-credentials>
   <!-- Your content -->
@@ -223,7 +223,7 @@ The easiest way to configure Mercure is to add the `data-mercure-hub-url` attrib
 ```
 
 ```typescript
-import { App, Mercure } from "react-htx";
+import { App, Mercure } from "reactolith";
 
 const app = new App(component);
 // mercureConfig is automatically set from data-mercure-hub-url attribute
@@ -242,7 +242,7 @@ mercure.on("sse:connected", (url) => {
 Alternatively, you can configure Mercure programmatically:
 
 ```typescript
-import { App, Mercure } from "react-htx";
+import { App, Mercure } from "reactolith";
 
 const app = new App(component);
 const mercure = new Mercure(app);
@@ -294,7 +294,7 @@ This triggers a GET request to the current URL and renders the response.
 For simple live values (like notification counts, user status), use the `useMercureTopic` hook to subscribe to Mercure topics that send JSON data:
 
 ```tsx
-import { useMercureTopic } from 'react-htx';
+import { useMercureTopic } from 'reactolith';
 
 // Simple types - inferred from initial value
 function NotificationBadge() {
@@ -363,12 +363,12 @@ For partial updates (e.g., updating a sidebar across all pages), you can create 
 
 **Setup:**
 ```typescript
-import { App, Mercure, MercureLive } from 'react-htx';
+import { App, Mercure, MercureLive } from 'reactolith';
 import loadable from '@loadable/component';
 
 const component = loadable(
     async ({ is }: { is: string }) => {
-        // The mapping is up to you, react-htx only provides the MercureLive Component (don't lazy load it!)
+        // The mapping is up to you, reactolith only provides the MercureLive Component (don't lazy load it!)
         if (is === 'mercure-live') {
             return MercureLive;
         }
@@ -414,7 +414,7 @@ export function Sidebar({ children }: { children: React.ReactNode }) {
 
 **HTML Usage:**
 ```html
-<div id="htx-app">
+<div id="reactolith-app">
   <nav>...</nav>
 
   <!-- Diese Region wird live aktualisiert -->
@@ -457,7 +457,7 @@ $hub->publish(new Update('/sidebar', $html));
 
 ## 🧩 IDE Autocomplete (Web-Types)
 
-`react-htx` includes a CLI tool to generate [web-types](https://github.com/JetBrains/web-types) for your custom components. This enables **autocomplete and validation** in IDEs like WebStorm, PhpStorm, and VS Code (with appropriate plugins).
+`reactolith` includes a CLI tool to generate [web-types](https://github.com/JetBrains/web-types) for your custom components. This enables **autocomplete and validation** in IDEs like WebStorm, PhpStorm, and VS Code (with appropriate plugins).
 
 ### Generate web-types.json
 
@@ -471,7 +471,7 @@ npx generate-web-types -c src/components/ui -o web-types.json -n my-app
 | `--components` | `-c` | Components directory | `components/ui` |
 | `--tsconfig` | `-t` | TypeScript config file | `tsconfig.app.json` (or `tsconfig.json`) |
 | `--out` | `-o` | Output file | `web-types.json` |
-| `--name` | `-n` | Library name | `htx-components` |
+| `--name` | `-n` | Library name | `reactolith-components` |
 | `--version` | `-v` | Library version | `1.0.0` |
 | `--prefix` | `-p` | Element name prefix | `""` |
 | `--help` | `-h` | Show help | |
