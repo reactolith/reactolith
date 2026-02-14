@@ -1,5 +1,8 @@
 import { App } from "./App";
 import { Href } from "@react-types/shared";
+import { ScrollRestoration } from "./ScrollRestoration";
+
+export type ScrollOption = "top" | "preserve";
 
 export type FetchLike = (
   input: RequestInfo | URL,
@@ -54,6 +57,7 @@ export const hasNavBypassModifiers = (e: MouseEvent) =>
 export class Router {
   private readonly app: App;
   private readonly fetch: FetchLike;
+  private readonly scrollRestoration?: ScrollRestoration;
   private listeners: Partial<
     Record<
       keyof RouterEventMap,
@@ -65,11 +69,17 @@ export class Router {
     app: App,
     doc: Document = document,
     fetchImpl: FetchLike = fetch,
+    scrollElement: Element | null = null,
   ) {
     this.app = app;
     this.fetch = (input, init) => fetchImpl(input, init);
 
     if (doc.defaultView) {
+      this.scrollRestoration = new ScrollRestoration(
+        doc.defaultView,
+        scrollElement,
+      );
+
       doc.defaultView.addEventListener("popstate", async () => {
         await this.visit(
           location.pathname + location.search,
@@ -128,12 +138,16 @@ export class Router {
     input: URL | string,
     init: RequestInit = { method: "GET" },
     pushState: boolean = true,
+    scroll?: ScrollOption,
   ): Promise<{
     result: boolean;
     response: Response;
     html: string;
     finalUrl: string;
   }> {
+    // Save scroll position for the entry we are leaving
+    this.scrollRestoration?.save();
+
     this.emit("nav:started", input, init, pushState);
     const response = await this.fetch(input, init);
     const html = await response.text();
@@ -143,7 +157,14 @@ export class Router {
     const result = this.app.render(html);
 
     if (result && pushState) {
-      history.pushState({}, "", finalUrl);
+      const state = this.scrollRestoration?.push() ?? {};
+      history.pushState(state, "", finalUrl);
+    } else if (result && !pushState) {
+      this.scrollRestoration?.pop();
+    }
+
+    if (result) {
+      this.scrollRestoration?.scroll(pushState, scroll, finalUrl);
     }
 
     const event = result ? "render:success" : "render:failed";
@@ -173,7 +194,8 @@ export class Router {
     event.preventDefault();
     event.stopPropagation();
 
-    await this.visit(hrefAttr);
+    const scroll = link.dataset.scroll as ScrollOption | undefined;
+    await this.visit(hrefAttr, { method: "GET" }, true, scroll);
   }
 
   public async onSubmit(event: SubmitEvent) {
@@ -211,13 +233,19 @@ export class Router {
       body = formData;
     }
 
-    await this.visit(url || location.pathname + location.search, {
-      method,
-      body,
-    });
+    const scroll = form.dataset.scroll as ScrollOption | undefined;
+    await this.visit(
+      url || location.pathname + location.search,
+      { method, body },
+      true,
+      scroll,
+    );
   }
 
-  public async navigate(path: Href): Promise<void> {
-    await this.visit(path);
+  public async navigate(
+    path: Href,
+    options?: { scroll?: ScrollOption },
+  ): Promise<void> {
+    await this.visit(path, { method: "GET" }, true, options?.scroll);
   }
 }

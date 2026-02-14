@@ -199,6 +199,57 @@ function MyComponent({ header, footer } : { header : ReactNode, footer : ReactNo
 
 ---
 
+## 🔄 Scroll Restoration
+
+`reactolith` automatically manages scroll position during navigation, just like a traditional multi-page website:
+
+| Navigation | Behavior |
+|---|---|
+| Link click / Form submit | Scrolls to top |
+| URL with `#hash` | Scrolls to the hash element |
+| Browser Back / Forward | Restores previous scroll position |
+
+Scroll positions are stored in `sessionStorage`, so they survive page refreshes within the same tab.
+
+### Preserve Scroll Position
+
+Sometimes you don't want to scroll to the top after navigation (e.g., in-page filters, pagination). Add `data-scroll="preserve"` to the link or form:
+
+```html
+<!-- Link preserves scroll position -->
+<a href="/products?page=2" data-scroll="preserve">Next Page</a>
+
+<!-- Form preserves scroll position -->
+<form action="/search" method="GET" data-scroll="preserve">
+  <input type="text" name="q" />
+  <button type="submit">Search</button>
+</form>
+```
+
+### Programmatic Navigation
+
+```typescript
+// Default: scrolls to top
+router.navigate("/page");
+
+// Preserve current scroll position
+router.navigate("/page", { scroll: "preserve" });
+```
+
+### Custom Scroll Container
+
+By default, `reactolith` auto-detects the scroll container by walking up the DOM from the root element and finding the nearest ancestor with `overflow-y: auto|scroll`. If none is found, `window` is used.
+
+You can override this with an explicit selector:
+
+```html
+<div id="reactolith-app" data-scroll-container="#main-content">
+  ...
+</div>
+```
+
+---
+
 ## 📡 Real-time Updates with Mercure
 
 `reactolith` supports **Server-Sent Events (SSE)** via [Mercure](https://mercure.rocks/) for real-time updates from your backend. When the server publishes an update, the HTML is automatically rendered — just like with router navigation.

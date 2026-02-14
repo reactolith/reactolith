@@ -1,6 +1,8 @@
 export { App } from "./App";
 export type { MercureConfig } from "./App";
 export { Router } from "./Router";
+export type { ScrollOption } from "./Router";
+export { ScrollRestoration, detectScrollContainer } from "./ScrollRestoration";
 export { Mercure } from "./Mercure";
 export type { MercureOptions } from "./Mercure";
 export { ReactolithComponent } from "./ReactolithComponent";
