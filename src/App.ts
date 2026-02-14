@@ -3,6 +3,7 @@ import React, { ElementType, PropsWithChildren } from "react";
 import { AppProvider } from "./provider/AppProvider";
 import { FetchLike, Router } from "./Router";
 import { ReactolithComponent } from "./ReactolithComponent";
+import { detectScrollContainer } from "./ScrollRestoration";
 
 export type MercureConfig = {
   hubUrl: string;
@@ -27,7 +28,6 @@ export class App {
     doc: Document = document,
     fetchImp: FetchLike = fetch,
   ) {
-    this.router = new Router(this, doc, fetchImp);
     this.component = component;
     this.appProvider = appProvider;
     this.doc = doc;
@@ -47,6 +47,16 @@ export class App {
 
     this.element = element;
     this.root = root || createRoot(this.element);
+
+    // Determine scroll container: explicit attribute > auto-detection > window
+    const scrollContainerSelector = this.element.getAttribute(
+      "data-scroll-container",
+    );
+    const scrollElement = scrollContainerSelector
+      ? doc.querySelector(scrollContainerSelector)
+      : detectScrollContainer(this.element, doc);
+
+    this.router = new Router(this, doc, fetchImp, scrollElement);
 
     // Auto-configure Mercure from data-mercure-hub-url attribute
     const mercureHubUrl = this.element.getAttribute("data-mercure-hub-url");
