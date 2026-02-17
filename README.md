@@ -516,16 +516,51 @@ $hub->publish(new Update('/sidebar', $html));
 npx generate-web-types -c src/components/ui -o web-types.json -n my-app
 ```
 
+The generator **recursively scans** the components directory, so both flat and nested structures are supported:
+
+```
+src/components/ui/
+  button.tsx              # flat
+  card.tsx                # flat
+  accordion/
+    accordion.tsx         # nested
+    accordion-item.tsx    # nested
+```
+
+All components are discovered automatically — no extra configuration needed.
+
 **Options:**
 | Option | Short | Description | Default |
 |--------|-------|-------------|---------|
-| `--components` | `-c` | Components directory | `components/ui` |
+| `--components` | `-c` | Components directory (scanned recursively) | `components/ui` |
 | `--tsconfig` | `-t` | TypeScript config file | `tsconfig.app.json` (or `tsconfig.json`) |
 | `--out` | `-o` | Output file | `web-types.json` |
 | `--name` | `-n` | Library name | `reactolith-components` |
 | `--version` | `-v` | Library version | `1.0.0` |
 | `--prefix` | `-p` | Element name prefix | `""` |
 | `--help` | `-h` | Show help | |
+
+**Examples:**
+
+```bash
+# Minimal — uses defaults for everything else
+npx generate-web-types -c src/components/ui
+
+# With prefix — all elements get a "ui-" prefix (e.g. <ui-button>, <ui-card>)
+npx generate-web-types -c src/components -p ui- -o web-types.json
+
+# Full example with all options
+npx generate-web-types \
+  -c src/components/ui \
+  -o web-types.json \
+  -n my-app \
+  -v 2.0.0 \
+  -p app- \
+  -t tsconfig.app.json
+
+# Custom tsconfig (e.g. monorepo or library setup)
+npx generate-web-types -c packages/ui/src -t packages/ui/tsconfig.json -o packages/ui/web-types.json
+```
 
 ### Configure your project
 

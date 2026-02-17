@@ -30,21 +30,31 @@ interface ComponentInfo {
   sourceFile: SourceFile;
 }
 
+function findComponentFiles(dir: string): string[] {
+  const results: string[] = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      results.push(...findComponentFiles(fullPath));
+    } else if (entry.name.endsWith(".tsx") || entry.name.endsWith(".ts")) {
+      results.push(fullPath);
+    }
+  }
+  return results;
+}
+
 export function generateWebTypes(options: GenerateWebTypesOptions) {
   const project = new Project({
     tsConfigFilePath: options.tsconfig || "./tsconfig.json",
   });
 
   const componentsDir = path.resolve(options.componentsDir || "components/ui");
-  const files = fs
-    .readdirSync(componentsDir)
-    .filter((f: string) => f.endsWith(".tsx") || f.endsWith(".ts"));
+  const files = findComponentFiles(componentsDir);
 
   const elements: any[] = [];
   const prefix = options.prefix || "";
 
-  files.forEach((file: string) => {
-    const filePath = path.join(componentsDir, file);
+  files.forEach((filePath: string) => {
     const sourceFile = project.addSourceFileAtPath(filePath);
     if (!sourceFile) return;
 

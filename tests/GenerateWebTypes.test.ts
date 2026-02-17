@@ -293,6 +293,64 @@ describe("generateWebTypes", () => {
     expect(names).toEqual(sortedNames);
   });
 
+  it("discovers components in subdirectories", () => {
+    generateWebTypes({
+      componentsDir,
+      outFile,
+      tsconfig,
+    });
+
+    const content = JSON.parse(fs.readFileSync(outFile, "utf-8"));
+    const elements = content.contributions.html.elements;
+
+    const accordion = elements.find((el: any) => el.name === "accordion");
+    expect(accordion).toBeDefined();
+    expect(accordion.description).toContain("Accordion");
+  });
+
+  it("handles nested component naming correctly", () => {
+    generateWebTypes({
+      componentsDir,
+      outFile,
+      tsconfig,
+    });
+
+    const content = JSON.parse(fs.readFileSync(outFile, "utf-8"));
+    const elements = content.contributions.html.elements;
+
+    const accordionItem = elements.find(
+      (el: any) => el.name === "accordion-item",
+    );
+    expect(accordionItem).toBeDefined();
+    expect(accordionItem.attributes).toBeDefined();
+
+    const title = accordionItem.attributes.find(
+      (attr: any) => attr.name === "title",
+    );
+    expect(title).toBeDefined();
+    expect(title.required).toBe(true);
+  });
+
+  it("includes both flat and nested components", () => {
+    generateWebTypes({
+      componentsDir,
+      outFile,
+      tsconfig,
+    });
+
+    const content = JSON.parse(fs.readFileSync(outFile, "utf-8"));
+    const elements = content.contributions.html.elements;
+    const names = elements.map((el: any) => el.name);
+
+    // Flat components
+    expect(names).toContain("button");
+    expect(names).toContain("card");
+
+    // Nested components
+    expect(names).toContain("accordion");
+    expect(names).toContain("accordion-item");
+  });
+
   it("omits slots property when there are no slots", () => {
     generateWebTypes({
       componentsDir,

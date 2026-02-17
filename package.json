@@ -1,6 +1,6 @@
 {
   "name": "reactolith",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Use HTML on the server to compose your react application.",
   "license": "MIT",
   "author": "Franz Mayr-Wilding",
@@ -54,13 +54,13 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
-    "@react-types/shared": "^3.32.1",
+    "@react-types/shared": "^3.33.0",
     "@rollup/plugin-commonjs": "^29.0.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
-    "@types/node": "^25.2.0",
-    "@types/react": "^19.2.10",
+    "@types/node": "^25.2.3",
+    "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitest/coverage-v8": "^4.0.18",
     "eslint": "^9.39.2",
@@ -69,7 +69,7 @@
     "eslint-plugin-react": "^7.37.5",
     "globals": "^17.3.0",
     "jiti": "^2.6.1",
-    "jsdom": "^28.0.0",
+    "jsdom": "^28.1.0",
     "prettier": "^3.8.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
@@ -79,7 +79,7 @@
     "rollup-plugin-typescript2": "^0.36.0",
     "ts-morph": "^27.0.2",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.54.0",
+    "typescript-eslint": "^8.56.0",
     "vitest": "^4.0.18"
   },
   "engines": {
