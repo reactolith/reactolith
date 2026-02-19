@@ -437,6 +437,37 @@ describe("ReactolithComponent HTML to React transformation", () => {
       expect(root.querySelector("input")).toHaveAttribute("type", "text");
     });
 
+    it("renders inline SVG elements as native elements", async () => {
+      document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
+        <my-icon>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+            <circle cx="12" cy="12" r="10"></circle>
+          </svg>
+        </my-icon>
+      </div>`;
+
+      function iconComponent({
+        is,
+        children,
+      }: {
+        is: string;
+        children: ReactNode;
+      }) {
+        return <span data-is={is}>{children}</span>;
+      }
+
+      new App(iconComponent);
+
+      const root = await screen.findByTestId("reactolith-app");
+
+      await waitFor(() => {
+        expect(root.querySelector('[data-is="my-icon"]')).not.toBeNull();
+      });
+
+      expect(root.querySelector("svg")).not.toBeNull();
+      expect(root.querySelector("circle")).not.toBeNull();
+    });
+
     it("returns null when element is undefined", async () => {
       document.body.innerHTML = `<div id="reactolith-app" data-testid="reactolith-app">
         <my-component>Content</my-component>

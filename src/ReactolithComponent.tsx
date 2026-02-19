@@ -14,12 +14,12 @@ const normalizePropName = (name: string) => {
   return name.substring(0, 1).toLowerCase() + name.substring(1);
 };
 
-function getKey(element: HTMLElement): string | undefined {
+function getKey(element: Element): string | undefined {
   return element.attributes.getNamedItem("key")?.value;
 }
 
 function getProps(
-  element: HTMLElement,
+  element: Element,
   component: ElementType,
   isReactComponent: boolean = true,
 ): { [key: string]: unknown } {
@@ -57,7 +57,7 @@ function getProps(
 }
 
 function getSlots(
-  element: HTMLElement,
+  element: Element,
   component: ElementType,
 ): Record<string, React.ReactNode[]> {
   const slots: Record<string, ReactNode[]> = {};
@@ -77,7 +77,7 @@ function getSlots(
 }
 
 function getChildren(
-  element: HTMLElement | DocumentFragment,
+  element: Element | DocumentFragment,
   component: ElementType,
 ): ReactNode[] {
   return Array.from(element.childNodes)
@@ -95,7 +95,7 @@ function getChildren(
         return (
           <ReactolithComponent
             key={key}
-            element={child as HTMLElement}
+            element={child}
             component={component}
           />
         );
@@ -105,12 +105,12 @@ function getChildren(
     .filter(Boolean);
 }
 
-type ReactolithProps<T extends HTMLElement = HTMLElement> = React.HTMLAttributes<T> & {
-  element?: HTMLElement;
+type ReactolithProps = React.HTMLAttributes<Element> & {
+  element?: Element;
   component: React.ElementType;
 };
 
-export const ReactolithComponent = React.forwardRef<HTMLElement, ReactolithProps>(
+export const ReactolithComponent = React.forwardRef<Element, ReactolithProps>(
   ({ element, component: Component, ...props }, forwardedRef) => {
     if (!element) return null;
 
@@ -119,7 +119,7 @@ export const ReactolithComponent = React.forwardRef<HTMLElement, ReactolithProps
 
     const isReactComponent =
       tagName.includes("-") ||
-      document.createElement(tagName).constructor === HTMLUnknownElement;
+      (!(element instanceof HTMLElement) && !(element instanceof SVGElement));
 
     const type: React.ElementType = isReactComponent
       ? Component

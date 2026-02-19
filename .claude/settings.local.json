@@ -9,7 +9,9 @@
       "Bash(cat:*)",
       "Bash(node -e:*)",
       "Bash(npm run build:*)",
-      "Bash(npx vitest run)"
+      "Bash(npx vitest run)",
+      "Bash(npx vitest:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }
