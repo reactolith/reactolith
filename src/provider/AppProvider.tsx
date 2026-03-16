@@ -23,7 +23,7 @@ export const AppProvider: React.FC<PropsWithChildren<{ app: App }>> = ({
 }) => {
   useEffect(() => {
     app.element.classList.remove("hidden");
-  }, []);
+  }, [app]);
   return (
     <AppContext.Provider value={app}>
       <RouterProvider>{children}</RouterProvider>
