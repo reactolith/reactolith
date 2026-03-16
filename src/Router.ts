@@ -58,6 +58,10 @@ export class Router {
   private readonly app: App;
   private readonly fetch: FetchLike;
   private readonly scrollRestoration?: ScrollRestoration;
+  private readonly doc: Document;
+  private readonly boundOnClick: (e: MouseEvent) => void;
+  private readonly boundOnSubmit: (e: SubmitEvent) => void;
+  private readonly boundOnPopState?: () => void;
   private listeners: Partial<
     Record<
       keyof RouterEventMap,
@@ -72,7 +76,11 @@ export class Router {
     scrollElement: Element | null = null,
   ) {
     this.app = app;
+    this.doc = doc;
     this.fetch = (input, init) => fetchImpl(input, init);
+
+    this.boundOnClick = (e) => this.onClick(e);
+    this.boundOnSubmit = (e) => this.onSubmit(e);
 
     if (doc.defaultView) {
       this.scrollRestoration = new ScrollRestoration(
@@ -80,17 +88,28 @@ export class Router {
         scrollElement,
       );
 
-      doc.defaultView.addEventListener("popstate", async () => {
+      this.boundOnPopState = async () => {
         await this.visit(
           location.pathname + location.search,
           { method: "GET" },
           false,
         );
-      });
+      };
+      doc.defaultView.addEventListener("popstate", this.boundOnPopState);
     }
 
-    doc.addEventListener("click", (e) => this.onClick(e));
-    doc.addEventListener("submit", (e) => this.onSubmit(e));
+    doc.addEventListener("click", this.boundOnClick);
+    doc.addEventListener("submit", this.boundOnSubmit);
+  }
+
+  destroy(): void {
+    this.doc.removeEventListener("click", this.boundOnClick);
+    this.doc.removeEventListener("submit", this.boundOnSubmit);
+    if (this.boundOnPopState && this.doc.defaultView) {
+      this.doc.defaultView.removeEventListener("popstate", this.boundOnPopState);
+    }
+    this.scrollRestoration?.destroy();
+    this.listeners = {};
   }
 
   private ensureSet<K extends keyof RouterEventMap>(

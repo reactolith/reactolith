@@ -31,6 +31,7 @@ export class ScrollRestoration {
   private currentId: string;
   private readonly win: Window;
   private readonly scrollElement: Element | null;
+  private readonly boundPersist: () => void;
 
   constructor(win: Window, scrollElement: Element | null = null) {
     this.win = win;
@@ -53,7 +54,14 @@ export class ScrollRestoration {
     this.hydrate();
 
     // Flush to sessionStorage before the tab/page closes
-    win.addEventListener("beforeunload", () => this.persist());
+    this.boundPersist = () => this.persist();
+    win.addEventListener("beforeunload", this.boundPersist);
+  }
+
+  destroy(): void {
+    this.persist();
+    this.win.removeEventListener("beforeunload", this.boundPersist);
+    this.positions.clear();
   }
 
   /* ------------------------------------------------------------------ */
